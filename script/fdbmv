@@ -1,0 +1,82 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+use DBI;
+
+use DBIx::FileStore;
+#use DBIx::FileStore::UtilityFunctions qw( convert_bytes_to_human_size );
+#use Data::Dumper;
+
+# fdbmv: renames files in FileDB
+#
+main();
+
+sub Usage {
+    "fdbmv [--verbose] from to: renames files stored in filedb\n";
+}
+
+sub main {
+    my $verbose = 0;
+    GetOptions(
+        "verbose" => \$verbose,
+    ) || die Usage();
+
+    my $filestore = new DBIx::FileStore();
+
+    die ("fdbmv: pass from and to fdbnames\n" . Usage()) unless @ARGV == 2;
+
+    print "Looking for '$ARGV[0] %'...\n" if $verbose;
+
+    # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
+    # renames the rows in the filetable and the blockstable
+    my $dbh = $filestore->{dbh};
+    $filestore->{dbh}->do("lock tables $filestore->{filetable} write, $filestore->{blockstable} write");
+    for my $table ( ( $filestore->{filetable}, $filestore->{blockstable} ) ) {
+        my $sql = "select name from $table where name like ?";
+        $sql .= " order by b_num" if $table eq $filestore->{filetable};
+        my $files = $dbh->selectall_arrayref( $sql, {}, $ARGV[0] . " %");
+        for my $f (@$files) {
+            (my $num = $f->[0]) =~ s/.* //;
+            print "$0: Moving $table:$f->[0], (num $num) to '$ARGV[1] $num'...\n" if $verbose;
+            $dbh->do("update $table set name=? where name=?", {}, $ARGV[1] . " $num", $f->[0]);
+        }
+    }
+    $dbh->do("unlock tables");
+}
+
+=head1 NAME     
+            
+fdbmv - rename files in DBIx::FileStore
+                    
+=head1 SYNOPSIS     
+                
+% fdbmv a.txt b.txt
+
+# renames a.txt to b.txt in the filestore
+
+% fdbmv -v a.txt b.txt
+
+# renames a.txt to b.txt in the filestore, showing the rows
+being renamed in the database.
+
+See options below for more details.
+
+=head1 DESCRIPTION 
+
+renames files in DBIx::Filestore 
+
+=head1 OPTIONS
+
+=head2 --verbose or -v
+
+Show rows that are being renamed.
+                
+=head1 AUTHOR
+
+Josh Rabinowitz <joshr>
+    
+=head1 SEE ALSO
+    
+L<DBIx::FileStore>, L<fdbcat>,  L<fdbls>, L<fdbput>,  L<fdbrm>,  L<fdbstat>,  L<fdbtidy>
+    
+=cut   

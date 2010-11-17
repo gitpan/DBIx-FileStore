@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+use DBIx::FileStore;
+
+main();
+
+sub Usage {
+    "fdbslurp: Doesn't understand options yet.\n";
+}
+
+sub main {
+    $|++;
+    # fdbslurp: copies a file (or files) from the db
+
+    GetOptions() || die Usage();
+
+    my $filestore = new DBIx::FileStore();
+
+    die "fdbslurp: slurp file into FileDB\n" unless @ARGV;
+    die "fdbslurp: Usage: fdbslurp /fdb/dest < filename" unless (@ARGV eq 1);
+    for(@ARGV) {
+        die "fdbslurp: NOT WRITTEN YET!";
+    }
+}
+
+__END__     
+            
+=head1 NAME     
+            
+fdbslurp - slurp from stdin into the DBIx::FileStore filestore.
+                    
+=head1 SYNOPSIS     
+                
+% fdbslurp filename.txt < SOMEFILE.txt
+
+or
+
+% echo "HI THERE" | fdbslurp filename.txt
+
+=head1 DESCRIPTION 
+
+slurp from stdin into the DBIx::FileStore filestore. NOT IMPLEMENTED!!!
+
+=head1 AUTHOR
+
+Josh Rabinowitz <joshr>
+    
+=head1 SEE ALSO
+    
+L<DBIx::FileStore>, L<fdbcat>,  L<fdbget>, L<fdbls>, L<fdbmv>,  L<fdbput>,  
+L<fdbrm>,  L<fdbstat>
+    
+=cut    
+

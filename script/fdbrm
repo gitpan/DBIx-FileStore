@@ -1,0 +1,68 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+use DBI;
+
+use DBIx::FileStore;
+
+my $verbose  = 0;
+main();
+
+sub Usage {
+    "fdbrm [--verbose] [files]: Removes files from the FileDB\n";
+}
+
+sub main {
+    # fdbrm: copies a file (or files) into the db
+    GetOptions(
+        "verbose" => \$verbose,
+    ) || die Usage();
+
+    my $filestore = new DBIx::FileStore();
+    my $dbh = $filestore->{dbh};
+    my $filetable = $filestore->{filetable};        # probably "files"
+    my $blockstable = $filestore->{blockstable};    # probably "fileblocks"
+
+    die "fdbrm: pass dbfilename(s) to delete\n" unless @ARGV;
+    for(@ARGV) {
+        warn "fdbrm: Error: not using '$_' as dbfilename to remove\n" && next unless $_;
+        for my $table ( ( $filetable, $blockstable ) ) {
+            my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$_ %" ));
+            if($rv) {
+                print "fdbrm: $table: deleted $_ ($rv blocks)\n" if $verbose;
+            } else {
+                warn  "fdbrm: no blocks to delete for $table:$_\n";
+            }
+        }
+    }
+}
+__END__
+
+
+=head1 NAME     
+            
+fdbrm - deletes files from DBIx::Filestore to filesystem
+                    
+=head1 SYNOPSIS     
+                
+% fdbrm filename.txt
+
+# deletes file filename.txt from filestore
+
+% fdbrm filename.txt filename2.txt
+
+=head1 DESCRIPTION 
+
+Deletes files from DBIx::Filestore. --verbose option
+shows rows being deleted from the database.
+
+=head1 AUTHOR
+
+Josh Rabinowitz <joshr>
+    
+=head1 SEE ALSO
+    
+L<DBIx::FileStore>, L<fdbcat>, L<fdbget>, L<fdbls>, L<fdbmv>, L<fdbput>, L<fdbstat>, L<fdbtidy>
+    
+=cut    
+

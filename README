@@ -1,0 +1,69 @@
+DBIx-FileStore
+
+Perl module that provides tools to insert, delete and manipulate
+files stored in a mysql database. 
+
+"What!?" you'd say. "You're not supposed to store files directly
+in a database!"
+
+And I'd say, "Yes, friend, you're right. But sometimes you just 
+want to anyway." I actually wrote this just to see how well it would
+work.
+
+ The answer is that it works fine! Modulus the fact that you're
+storing large blobs in a database. In particular, it might make 
+your mysql transaction logs pretty large... but that's another story.
+
+The details are explained throughout the module's documentation, 
+(in particular see the documentation for DBIx::FileStore).
+
+In a nutshell you can copy files into and out of the database 
+(respectively) using the commands 'fdbput' and 'fdbget'.
+
+'fdbmv' and 'fdbrm' are also provided, along
+with a few other utilities in the script/ directory.
+
+The important things to note are: 
+ 
+1) All the filenames in the filestore are in one flat address space.
+   That is, a file like '/a/b/c.txt' is called just that, it's not
+   in a folder called /a/b/ (although fdbls does offer some support
+   for directory-like viewing of files with common prefixes).
+
+2) The filenames in the filestore cannot contain spaces. It's demo
+   code after all -- we tried to keep it simple.
+
+For usage details, see the QUICKSTART.txt file in this folder 
+and the documentation for the filestore scripts in the script/ 
+directory.
+
+For technical details, see the documentation for DBIx::FileStore
+and the utilities in script/
+
+There's also a video demo available at joshr.com/src/DBIx-FileStore/ 
+that is provided in multiple formats. 
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+	perl Makefile.PL
+	make
+	make test
+	make install
+
+
+See also the QUICKSTART.txt file to get started.
+
+
+LICENSE AND COPYRIGHT
+
+Copyright (C) 2010 Josh Rabinowitz
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
+

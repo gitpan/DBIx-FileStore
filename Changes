@@ -1,0 +1,25 @@
+Revision history for DBIx-FileStore
+
+0.05    2010/11/17  12:10PM
+        Documentation added for all scripts and modules.
+        QUICKSTART.txt added.
+        README updated.
+        Enable t/pod-coverage.t test.
+        fdbput and fdbget have --local=filename option added.
+        Removed fdbcp.
+        Code cleanup.
+
+0.04    2010/11/16  3:12PM
+        This release skipped.
+
+0.03    2010/11/10  3:12PM
+        Added needed lib/DBIx/FileStore/ConfigFile.pm file.
+
+0.02    2010/11/10  1:30PM
+        Added table-definitions.sql to the source.
+        Don't hardcode name of files table in fdbmv.
+        Better Usage() output for fdbls.
+
+0.01    2010/11/10 12:30PM
+        First version, released on an unsuspecting world.
+

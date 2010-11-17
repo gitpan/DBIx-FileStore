@@ -1,0 +1,35 @@
+#!/usr/bin/perl -w
+use strict;
+use Getopt::Long;
+    #fdbstat: shows stats about files in FileDB
+
+use DBIx::FileStore;
+use DBIx::FileStore::UtilityFunctions qw( convert_bytes_to_human_size );
+
+my $human = 0;
+
+main();
+
+sub main {
+    GetOptions(
+        "human!" => \$human,
+    ) || die "fdbstat [-human]: Doesn't understand other options yet.\n";
+
+    my $filestore = new DBIx::FileStore(); 
+
+    # count how many blocks are numbered '0', there's one for each file
+    # also sum up the filesizes
+    my ($files, $bytes) = $filestore->{dbh}->selectrow_array( 
+            "select count(*), sum(c_len) from $filestore->{filetable} where b_num like 0", {} );
+    $bytes ||= 0;
+
+    # count the blocks
+    my ($blocks) = $filestore->{dbh}->selectrow_array( "select count(*) from $filestore->{blockstable}" );
+
+    # old way
+    #print "fdbstat: DB has $bytes bytes in $files files stored in $blocks blocks.\n";
+    
+    # new way, respecting --human param
+    printf( "fdbstat: DB has %s in $files files stored in $blocks blocks.\n",
+            $human ? convert_bytes_to_human_size( $bytes) : "$bytes bytes" );
+}
