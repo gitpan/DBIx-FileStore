@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 confhash
                 );
 
-our $VERSION = '0.07';  # version also mentioned in POD below.
+our $VERSION = '0.08';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -223,7 +223,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =head1 SYNOPSIS
 

@@ -26,5 +26,5 @@ t/pod.t
 table-definitions.sql
 fdb.conf-sample
 TODO
-QUICKSTART.txt
+QUICKSTART.pod
 META.yml                                 Module meta-data (added by MakeMaker)
