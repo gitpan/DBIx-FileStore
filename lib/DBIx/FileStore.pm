@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 confhash
                 );
 
-our $VERSION = '0.05';  # also mentioned in POD below.
+our $VERSION = '0.07';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -97,7 +97,8 @@ sub read_from_db {
     return $ret;    
 }
 
-# returns the length of the data read.
+# returns the length of the data read,
+# calls &$callback( $block ) for each block read.
 sub _read_blocks_from_db {
     my ($self, $callback, $fdbname) = @_;
         # callback is called on each block, like &$callback( $block )
@@ -127,10 +128,11 @@ sub _read_blocks_from_db {
         }
         my $name_num = $1;
         $orig_c_md5 ||= $row->[2];
+
+        # check the MD5...
         if ($row->[2] ne $orig_c_md5) { die "$0: Error: Is DB being updated? Bad content md5sum for $row->[0]\n"; }
         die "$0: Error: our count is row num $rownum, but file says $name_num" 
             unless $rownum == $name_num;
-        # check the MD5...
         
         my ($block) =  $dbh->selectrow_array("select block from fileblocks where name=?", {}, $row->[0]);
         die "$0: Bad MD5 checksum for $row->[0] ($row->[1] != " . md5_base64( $block ) 
@@ -213,13 +215,15 @@ sub name_ok {
 
 1;
 
+=pod
+
 =head1 NAME
 
 DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.05
+Version 0.07
 
 =head1 SYNOPSIS
 
@@ -254,9 +258,9 @@ filestore as if they were in folders. See the docs on 'fdbls' for details.)
 
 NOTE THAT THIS IS A PROOF-OF-CONCEPT DEMO.
 
-THIS WAS NOT DESIGNED AS A PRODUCTION EXAMPLE!!!!!
+THIS WAS NOT DESIGNED AS PRODUCTION CODE.
 
-IN PARTICULAR, we wouldn't have one row in the 'files' table for
+In particular, we wouldn't have one row in the 'files' table for
 each block in the 'fileblocks' table, we'd have one row per file.
 
 Also, we'd probably use a unique ID to address the blocks in the
@@ -282,8 +286,9 @@ for example "filestorename.txt 00000".
 
 =head3 block
 
-The contents of the named block. Each block can currently be a maximum of
-512K.
+The contents of the named block. Each block is currently to be 512K.
+Care must be taken to use blocks that are not larger than
+mysql buffers can handle (in particular, max_allowed_packet).
 
 =head3 timestamp
 
@@ -303,12 +308,13 @@ for example "filestorename.txt 00000".
 
 =head3 c_len 
 
-The content length of the whole file (sum of length of all relevant blocks).
+The content length of the whole file (sum of length of all the file's blocks).
 
 =head3 b_num
 
 The number of the block this row represents. The b_num is repeated as a five
-digit number at the end of the name field (see above).
+digit number at the end of the name field (see above). We denormalized
+the data like this so you can quickly find blocks by name or block number.
 
 =head3 b_md5
 

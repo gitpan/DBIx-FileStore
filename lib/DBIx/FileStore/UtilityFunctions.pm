@@ -64,9 +64,11 @@ sub get_user_homedir {
 
 1;
 
+=pod
+
 =head1 NAME
 
-DBIx::FileStore::UtilityFunctions -- Utility functions for DBIx::FileSTore
+DBIx::FileStore::UtilityFunctions -- Utility functions for DBIx::FileStore
 
 =head1 SYNOPSIS
 
@@ -86,8 +88,9 @@ DBIx::FileStore::UtilityFunctions -- Utility functions for DBIx::FileSTore
 
 =head1 DESCRIPTION
 
-Provides three functions: get_user_homedir(), get_date_and_time(),
-and convert bytes_to_human_size().
+Provides three functions: 
+
+get_user_homedir(), get_date_and_time(), and convert bytes_to_human_size().
 
 =head1 FUNCTIONS
 

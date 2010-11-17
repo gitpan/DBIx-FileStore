@@ -49,10 +49,12 @@ sub main {
 }
 
 __END__     
+
+=pod
             
 =head1 NAME     
             
-fdbtidy - handle dangling blocks in the DBIx::FileStore filestore.
+fdbtidy - Handle dangling blocks in the DBIx::FileStore filestore
                     
 =head1 SYNOPSIS     
                 

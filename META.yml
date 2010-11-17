@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               DBIx-FileStore
-version:            0.05
+version:            0.07
 abstract:           Module to store files in a DBI backend
 author:
     - joshr <joshr>

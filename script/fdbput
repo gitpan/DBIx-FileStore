@@ -41,11 +41,11 @@ sub main {
     }
 }
 
-__END__
+=pod
 
 =head1 NAME     
             
-fdbput - copies files from filesystem to DBIx::FileStore tables
+fdbput - Copies files from filesystem to DBIx::FileStore tables
                     
 =head1 SYNOPSIS     
                 
@@ -64,7 +64,7 @@ under the name 'filename.txt'.
 
 =head1 DESCRIPTION 
 
-copies files from the filesystem to DBIx::Filestore. 
+Copies files from the filesystem to DBIx::Filestore. 
 
 --local option allows user to specify a different name 
 in the filestore from the name used in the filesystem.

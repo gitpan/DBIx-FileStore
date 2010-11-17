@@ -29,35 +29,19 @@ sub main {
 
 =head1 NAME
 
-new_perl_script -- does something awesome
+mkmanifest - Creates or updates a perl module's MANIFEST file
 
 =head1 SYNOPSIS
 
-The synopsis, showing one or more typical command-line usages.
+% mkmanifest
+
+this might update the contents of the file MANIFEST based
+on the contents of directory.
 
 =head1 DESCRIPTION
 
-What the script does.
-
-=head1 OPTIONS
-
-Overall view of the options.
-
-=over 4
-
-=item --verbose/--noverbose
-
-Turns on/off verbose mode. (off by default)
-
-=back
-
-=head1 TO DO
-
-If you want such a section.
-
-=head1 BUGS
-
-None
+Uses ExtUtils::Manifest's mkmanifest() function to 
+add files to the MANIFEST.
 
 =head1 COPYRIGHT
 

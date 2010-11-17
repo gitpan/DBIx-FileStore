@@ -1,5 +1,20 @@
 Revision history for DBIx-FileStore
 
+0.07    2010/11/17  2:44PM
+        Documentation added for mkmanifest.
+        Tweaks to POD after seeing DBIx-FileStore 0.05 on CPAN.
+        Renamed QUICKSTART.txt to QUICKSTART.pod.
+
+0.06    2010/11/17  1:28PM
+        Documentation added for script/fdbstat.
+        Incomplete script/fdbslurp script cleaned up
+        and documented.
+        Comments and documentation cleaned up.
+        Mention mysql's max_allowed_packet setting in 
+        DBIx/FileStore.pm's pod.  
+        TODO updated.
+        Not released.
+
 0.05    2010/11/17  12:10PM
         Documentation added for all scripts and modules.
         QUICKSTART.txt added.

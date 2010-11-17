@@ -6,29 +6,29 @@ use DBIx::FileStore;
 main();
 
 sub Usage {
-    "fdbslurp: Doesn't understand options yet.\n";
+    "fdbslurp: slurp file into filestore. NOT IMPLEMENTED!\n" .
+    "  Example:         fdbslurp /fdb/dest < filename\n" .
+    "  is the same as:  fdbput --local filename /fdb/dest\n";
 }
 
 sub main {
     $|++;
-    # fdbslurp: copies a file (or files) from the db
+    # fdbslurp: slurps file(s) from stdin into the DB
+    
+    die Usage();    # NOTE: NOT IMPLEMENTED
 
-    GetOptions() || die Usage();
+    #GetOptions() || die Usage();
 
     my $filestore = new DBIx::FileStore();
 
-    die "fdbslurp: slurp file into FileDB\n" unless @ARGV;
-    die "fdbslurp: Usage: fdbslurp /fdb/dest < filename" unless (@ARGV eq 1);
-    for(@ARGV) {
-        die "fdbslurp: NOT WRITTEN YET!";
-    }
+    # CODE HERE
 }
 
-__END__     
+=pod
             
 =head1 NAME     
             
-fdbslurp - slurp from stdin into the DBIx::FileStore filestore.
+fdbslurp - Slurp from stdin into the DBIx::FileStore filestore. Not implemented.
                     
 =head1 SYNOPSIS     
                 
@@ -38,9 +38,11 @@ or
 
 % echo "HI THERE" | fdbslurp filename.txt
 
+Note that this script is not implemented yet.
+
 =head1 DESCRIPTION 
 
-slurp from stdin into the DBIx::FileStore filestore. NOT IMPLEMENTED!!!
+Slurp from stdin into the L<DBIx::FileStore> filestore. Not implemented.
 
 =head1 AUTHOR
 

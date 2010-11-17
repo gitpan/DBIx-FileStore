@@ -44,9 +44,11 @@ sub main {
     $dbh->do("unlock tables");
 }
 
+=pod
+
 =head1 NAME     
             
-fdbmv - rename files in DBIx::FileStore
+fdbmv - Rename files in DBIx::FileStore
                     
 =head1 SYNOPSIS     
                 

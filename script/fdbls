@@ -106,10 +106,11 @@ sub countslashes {
     return $cnt;
 }
 
+=pod
 
 =head1 NAME     
             
-fdbls - lists filenames in DBIx::FileStore
+fdbls - Lists filenames in DBIx::FileStore
                     
 =head1 SYNOPSIS     
                 
@@ -125,7 +126,7 @@ See options below for more details.
 
 =head1 DESCRIPTION 
 
-lists files in DBIx::Filestore 
+Lists files in DBIx::Filestore 
 
 =head1 OPTIONS
 

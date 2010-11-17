@@ -38,10 +38,12 @@ sub main {
 }
 
 __END__     
+
+=pod
             
 =head1 NAME     
             
-fdbget - copies files from DBIx::Filestore to filesystem
+fdbget - Copies files from DBIx::Filestore to filesystem
                     
 =head1 SYNOPSIS     
                 
@@ -60,7 +62,7 @@ under filename specifed by --local=filename option.
 
 =head1 DESCRIPTION 
 
-copies files from DBIx::Filestore to filesystem. --local option
+Copies files from filestore to filesystem. --local option
 allows user to specify different name on the filesystem from
 the name used in the filestore.
 

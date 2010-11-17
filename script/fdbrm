@@ -36,12 +36,12 @@ sub main {
         }
     }
 }
-__END__
 
+=pod
 
 =head1 NAME     
             
-fdbrm - deletes files from DBIx::Filestore to filesystem
+fdbrm - Deletes files from DBIx::Filestore
                     
 =head1 SYNOPSIS     
                 

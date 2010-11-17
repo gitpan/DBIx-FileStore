@@ -33,3 +33,40 @@ sub main {
     printf( "fdbstat: DB has %s in $files files stored in $blocks blocks.\n",
             $human ? convert_bytes_to_human_size( $bytes) : "$bytes bytes" );
 }
+
+=pod
+
+=head1 NAME     
+            
+fdbstat - Show stats about data in DBIx::FileStore 
+                    
+=head1 SYNOPSIS     
+                
+% fdbstat
+
+fdbstat: DB has 7623 bytes in 2 files stored in 2 blocks.
+
+% fdbstat -h
+
+fdbstat: DB has 550.2M in 8 files stored in 114 blocks.
+
+=head1 DESCRIPTION 
+
+Shows a line with the size, number of files, and number of blocks
+currently used by L<DBIx::FileStore> tables.
+
+=head1 OPTIONS
+
+=head2 --human or -h
+
+Show size as G, M, K or bytes, for humans.
+                
+=head1 AUTHOR
+
+Josh Rabinowitz <joshr>
+    
+=head1 SEE ALSO
+    
+L<DBIx::FileStore>, L<fdbcat>,  L<fdbget>, L<fdbls>, L<fdbmv>,  L<fdbput>,  L<fdbrm>,  L<fdbtidy>
+    
+=cut   

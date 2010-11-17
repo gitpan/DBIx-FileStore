@@ -53,6 +53,8 @@ sub read_config_file {
 
 1;
 
+=pod
+
 =head1 NAME
 
 DBIx::FileStore::ConfigFile -- Find and read filestore conf files.
