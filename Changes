@@ -1,5 +1,11 @@
 Revision history for DBIx-FileStore
 
+0.09    2010/11/19  11:10AM
+        Integrate QUICKSTART.pod into README for search.cpan.org.
+        Update TODO and MANIFEST.
+        Documentation changes and updates.
+        Tweak to DBIx::FileStore::ConfigFile for perl 5.6.2.
+
 0.08    2010/11/17  3:02PM
         Change QUICKSTART.txt to QUICKSTART.pod in MANIFEST.
         

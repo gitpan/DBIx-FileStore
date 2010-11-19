@@ -17,6 +17,8 @@ sub main {
 
     my $filestore = new DBIx::FileStore(); 
 
+    # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
+    
     # count how many blocks are numbered '0', there's one for each file
     # also sum up the filesizes
     my ($files, $bytes) = $filestore->{dbh}->selectrow_array( 

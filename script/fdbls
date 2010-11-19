@@ -19,7 +19,7 @@ sub Usage {
     "  Shows files in FileDB.  Note that if you have files like\n" . 
     "  /a/b/c.txt and /a/b/d.txt in the db, then\n" .
     "    % fdbls /a/b/\n" .
-    "  will show both files\n";
+    "  will show both files.\n";
 }
 
 sub main {
@@ -33,16 +33,15 @@ sub main {
     ) || die Usage();
 
     my $filestore = new DBIx::FileStore();
-    #print Dumper( $filestore );
 
     #die "fdbls: pass filename prefixes to show from DB\n" unless @ARGV;
     @ARGV = ( "" ) unless @ARGV;
+
     my %shown;
     for(@ARGV) {
         my $files;
         my $level = $all ? 0 : countslashes($_);    # so we don't show things that appear
                                                     # as if they're in SUB-folders
-
         print "Level of $_ is $level\n" if ($debug);
         # fetch all files with b_num = 0
         if ($_ eq "") {
@@ -50,7 +49,7 @@ sub main {
                 "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
                 where b_num=0 order by name");
         } else {
-            $_ .= "%"; # unless /%/;
+            $_ .= " %"; # unless /%/;
             $files = $filestore->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
                 "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
                 where name like ? and b_num=0 order by name", {}, "$_");
@@ -59,10 +58,10 @@ sub main {
         #print Dumper($files);
 
         for my $f (@$files) {
+            # each row is (name, c_len, c_md5, lasttimeasint)
             my $toshow = $level ? gettoshow($f->[0], $level) : $f->[0];
             $toshow =~ s/ 0+$//;
             next if $shown{$toshow}++;
-            $f->[0] =~ s/ 0+$//;
             my $line = "";
             if ($long || $human) {
                 if ($human) {

@@ -30,17 +30,23 @@ sub main {
     # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
     # renames the rows in the filetable and the blockstable
     my $dbh = $filestore->{dbh};
+
     $filestore->{dbh}->do("lock tables $filestore->{filetable} write, $filestore->{blockstable} write");
+
     for my $table ( ( $filestore->{filetable}, $filestore->{blockstable} ) ) {
+
         my $sql = "select name from $table where name like ?";
         $sql .= " order by b_num" if $table eq $filestore->{filetable};
+
         my $files = $dbh->selectall_arrayref( $sql, {}, $ARGV[0] . " %");
         for my $f (@$files) {
             (my $num = $f->[0]) =~ s/.* //;
             print "$0: Moving $table:$f->[0], (num $num) to '$ARGV[1] $num'...\n" if $verbose;
             $dbh->do("update $table set name=? where name=?", {}, $ARGV[1] . " $num", $f->[0]);
         }
+
     }
+
     $dbh->do("unlock tables");
 }
 

@@ -32,7 +32,8 @@ sub read_config_file {
     my $user_dotfile = catfile( get_user_homedir(), ".fdbrc" ); # ~/.fdbrc
     my $etc_conffile = "/etc/fdb.conf";
     unless( $filename ) {
-        $filename = first { -e $_ } ( ( $user_dotfile, $etc_conffile ) );
+        # explicit sub{} like this for perl 5.6.2
+        $filename = first( sub { -e shift }, $user_dotfile, $etc_conffile );
     }
 
     unless($filename) {
@@ -83,7 +84,7 @@ home directory , or /etc/fdb.conf, whichever is found first.
 
 my $conf = new DBIx::FileStore::ConfigFile();
 
-returns a new DBIx::FileStore::ConfigFile object.  
+Returns a new DBIx::FileStore::ConfigFile object.  
 
 =item $conf->read_config_file() 
 
@@ -95,7 +96,7 @@ Returns a hashref with the name/value pairs parsed from
 the configuration file. The settings expected by 
 DBIx-Filestore are: dbname, dbuser, and dbpasswd.
 
-If a $filename is passed by the caller, that is used as 
+If a $filename is passed by the caller, that file is used as 
 the configuration file. Otherwise the module uses 
 the file .fdbrc in the current user's home directory, 
 or /etc/fdb.conf, whichever is found first. 

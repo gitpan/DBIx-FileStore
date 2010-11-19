@@ -23,6 +23,8 @@ sub main {
     my $filestore = new DBIx::FileStore();
     my $dbh = $filestore->{dbh};
 
+    # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
+    
     $dbh->do( "lock tables files write, fileblocks write" );
     # get a list of all the files and their checksums, 
     my $files = $dbh->selectall_arrayref( "select name, c_len, c_md5 from files where b_num=0");

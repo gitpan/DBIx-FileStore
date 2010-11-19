@@ -27,6 +27,7 @@ sub main {
     for(@ARGV) {
         warn "fdbrm: Error: not using '$_' as dbfilename to remove\n" && next unless $_;
         for my $table ( ( $filetable, $blockstable ) ) {
+            # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
             my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$_ %" ));
             if($rv) {
                 print "fdbrm: $table: deleted $_ ($rv blocks)\n" if $verbose;

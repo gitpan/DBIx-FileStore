@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 confhash
                 );
 
-our $VERSION = '0.08';  # version also mentioned in POD below.
+our $VERSION = '0.09';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -223,7 +223,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =head1 SYNOPSIS
 
@@ -232,7 +232,7 @@ probably a bad idea, but maybe you want to do it anyway.
 
 This code helps you do that.
 
-Internally all the fdb tools in script/ use this library to 
+All the fdb tools in script/ use this library to 
 get at file names and contents in the database.
 
 To get started, see the files QUICKSTART.txt and README
@@ -252,22 +252,26 @@ The name need not correspond to the original name on the filesystem.
 All filenames in the filestore are in one flat address space.
 You can use / in filenames, but it does not represent an actual
 directory. (Although fdbls has some support for viewing files in the 
-filestore as if they were in folders. See the docs on 'fdbls' for details.)
+filestore as if they were in folders. See the docs on 'fdbls' 
+for details.)
 
 =head1 IMPLEMENTATION CAVEAT
 
-NOTE THAT THIS IS A PROOF-OF-CONCEPT DEMO.
+Note that DBIx::FileStore is a proof-of-concept demo.  It was 
+not designed as production code.
 
-THIS WAS NOT DESIGNED AS PRODUCTION CODE.
+That having been said, it works quite nicely. 
 
-In particular, we wouldn't have one row in the 'files' table for
-each block in the 'fileblocks' table, we'd have one row per file.
+There are some design choices that we've debated, though.
 
-Also, we'd probably use a unique ID to address the blocks in the
-fileblocks table, instead of the 'name' field that's currently used.
+In particular, we might reconsider having one row in the 'files' 
+table for each block stored in the 'fileblocks' table. 
+Perhaps instead, we'd have one entry in the 'files' table per file.
 
-That having been said, this example works quite nicely, and altering
-the DB Schema and code would not be a large effort.
+In concrete terms, though, the storage overhead of doing it this way
+is about 100 bytes per block-- and each block can be up to 512K. 
+So assuming an average block size of 256K, the overhead is about 
+0.03%.
 
 =head1 IMPLEMENTATION
 
@@ -290,7 +294,7 @@ The contents of the named block. Each block is currently to be 512K.
 Care must be taken to use blocks that are not larger than
 mysql buffers can handle (in particular, max_allowed_packet).
 
-=head3 timestamp
+=head3 lasttime
 
 The timestamp of when this block was inserted into the DB or updated.
 
