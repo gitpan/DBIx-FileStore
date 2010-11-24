@@ -14,7 +14,7 @@ use fields qw(  dbh dbuser dbpasswd
                 confhash
                 );
 
-our $VERSION = '0.10';  # version also mentioned in POD below.
+our $VERSION = '0.11';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -27,9 +27,9 @@ sub new {
     my $conf = $self->{confhash} = $config_reader->read_config_file();
 
     #TESTING WITH 1 BYTE BLOCKS
-    my $block_size = 1; # 1 byte blocks (!)
+    #my $block_size = 1; # 1 byte blocks (!)
     
-    #my $block_size = 500 * 1024;        # 512K blocks
+    my $block_size = 500 * 1024;        # 512K blocks
     #   with 900K (or even 600K) blocks (inserting binary .rpm files), 
     #   we get
     #
@@ -229,7 +229,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,8 @@
 Revision history for DBIx-FileStore
 
+0.11    2010/11/24  3:41PM
+        Revert default block size to 512K.
+
 0.10    2010/11/24  1:30PM
         Document dependency on DBD::mysql in Makefile.PL.
         Add Usage() function to fdbstat.
