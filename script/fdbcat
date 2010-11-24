@@ -6,19 +6,26 @@ use DBIx::FileStore;
 
 main();
 
+sub Usage {
+    "fdbcat FILENAME [FILENAMES]\n" . 
+    "  concatenates file contents to stdout, like cat\n";
+}
+
 sub main {
     $|++;
-    GetOptions() || die "fdbcat [FILENAMES]: Doesn't understand options yet.\n";
+
+    GetOptions() || die Usage();    # no options
 
     my $dbfs = new DBIx::FileStore( );
 
-    die "fdbcat: pass files to cat from DB\n" unless @ARGV;
-    for(@ARGV) {
-        unless ($dbfs->name_ok($_)) {
-            warn "Skipping file named $_\n";
+    die( "fdbcat: pass files to cat from DB\n" . Usage() ) unless @ARGV;
+
+    for my $filename (@ARGV) {
+        unless ($dbfs->name_ok($name)) {
+            warn "Skipping invalid file named $name\n";
             next;
         }
-        eval { $dbfs->_read_blocks_from_db(\&ourprintcallback, $_ ); };
+        eval { $dbfs->_read_blocks_from_db(\&ourprintcallback, $name ); };
         warn "fdbcat: Error reading $_: $@" if $@;
     }
 }

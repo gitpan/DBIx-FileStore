@@ -34,38 +34,48 @@ sub main {
 
     my $filestore = new DBIx::FileStore();
 
-    #die "fdbls: pass filename prefixes to show from DB\n" unless @ARGV;
     @ARGV = ( "" ) unless @ARGV;
 
     my %shown;
-    for(@ARGV) {
+    for my $name (@ARGV) {
         my $files;
-        my $level = $all ? 0 : countslashes($_);    # so we don't show things that appear
-                                                    # as if they're in SUB-folders
-        print "Level of $_ is $level\n" if ($debug);
-        # fetch all files with b_num = 0
-        if ($_ eq "") {
+
+        # $level iis used to support directory-like viewing
+        my $level = $all ? 0 : countslashes($name);    # so we don't show things that appear
+                                                       # as if they're in SUB-folders
+        print "Level of $name is $level\n" if ($debug);
+
+        # fetch all files with b_num = 0-- either all of them, or the ones
+        # matching $name
+        if ($name eq "") {
             $files = $filestore->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
                 "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
                 where b_num=0 order by name");
         } else {
-            $_ .= " %"; # unless /%/;
+            my $pattern = $name . "%"; 
             $files = $filestore->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
                 "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
-                where name like ? and b_num=0 order by name", {}, "$_");
+                 where name like ? and b_num=0 order by name", {}, $pattern);
         }
 
         #print Dumper($files);
+        print( "fdbls: got " . scalar(@$files) . " rows back for '$name'\n") if $debug;
 
         for my $f (@$files) {
             # each row is (name, c_len, c_md5, lasttimeasint)
-            my $toshow = $level ? gettoshow($f->[0], $level) : $f->[0];
-            $toshow =~ s/ 0+$//;
+            #
+            # $toshow becomes the 'folder' to show, 
+            # or the full filename from $f
+            my $toshow = $level ? filename_to_show($f->[0], $level) : $f->[0];
+            $toshow =~ s/ 0+//;
+
             next if $shown{$toshow}++;
+
+            # build up a line to show in $line, then show it 
             my $line = "";
             if ($long || $human) {
                 if ($human) {
-                    $line .= convert_bytes_to_human_size( $f->[1] ) . " ";
+                    $line .= sprintf("%-7s ", convert_bytes_to_human_size( $f->[1] ) );
                 } else {
                     $line .= sprintf("%9d ",  $f->[1]);		# c_len
                 }
@@ -81,9 +91,14 @@ sub main {
     }
 }
 
-sub gettoshow { 
+sub filename_to_show { 
     my ($f, $level) = @_;
-    #$f = "/" . $f unless (substr($f, 0, 1) eq "/");
+
+    #$f = "/" . $f unless (substr($f, 0, 1) eq "/");    
+    # This was to pretend that all incoming names started with /
+    #  (as if / were the working directory, since there are no 
+    #  directories in the filestore.)  We decided against this,
+    #  so the above code is commented out.
 
     my $cnt = 0;
     for(my $i=0; $i<length($f); $i++) {
@@ -92,7 +107,7 @@ sub gettoshow {
             return substr($f, 0, $i + 1);	# show the '/' too
         }
     }
-    $f =~ s/ 0+$//; # remove tailing 0's
+    $f =~ s/ 0+$//; # remove trailing 0's
     return $f;
 }
 

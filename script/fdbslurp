@@ -15,11 +15,11 @@ sub main {
     $|++;
     # fdbslurp: slurps file(s) from stdin into the DB
     
-    die Usage();    # NOTE: NOT IMPLEMENTED
-
     #GetOptions() || die Usage();
-
+    #
     my $filestore = new DBIx::FileStore();
+
+    die Usage();    # NOTE: NOT IMPLEMENTED
 
     # CODE HERE
 }

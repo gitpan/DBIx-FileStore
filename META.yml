@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               DBIx-FileStore
-version:            0.09
+version:            0.10
 abstract:           Module to store files in a DBI backend
 author:
     - joshr <joshr>
@@ -12,6 +12,7 @@ build_requires:
     ExtUtils::MakeMaker:  0
 requires:
     Config::File:         0
+    DBD::mysql:           0
     DBI:                  0
     Digest::MD5:          0
     File::Copy:           0

@@ -4,11 +4,9 @@ use Getopt::Long;
 use DBI;
 
 use DBIx::FileStore;
-#use DBIx::FileStore::UtilityFunctions qw( convert_bytes_to_human_size );
-#use Data::Dumper;
 
 # fdbmv: renames files in FileDB
-#
+
 main();
 
 sub Usage {
@@ -30,8 +28,7 @@ sub main {
     # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
     # renames the rows in the filetable and the blockstable
     my $dbh = $filestore->{dbh};
-
-    $filestore->{dbh}->do("lock tables $filestore->{filetable} write, $filestore->{blockstable} write");
+    $dbh->do("lock tables $filestore->{filetable} write, $filestore->{blockstable} write");
 
     for my $table ( ( $filestore->{filetable}, $filestore->{blockstable} ) ) {
 

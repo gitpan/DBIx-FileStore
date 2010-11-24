@@ -7,16 +7,17 @@ files stored in a mysql database.
 in a database!"
 
 And I say, "Yes, friend, you're right. But sometimes you just 
-want to anyway." I actually wrote this just to see how well it would
-work.
+want to anyway." I actually wrote this just to see how well it 
+would work.
 
-The answer is that it works fine! Modulus the fact that you're
-storing large blobs (up to 500K) in a database. In particular, 
-it might make your mysql transaction logs pretty large... 
-but that's another story.
+The answer is that it works fine. Modulus the fact that you're
+storing large blobs (up to 500K) in a database. (In particular, 
+it might make your mysql transaction logs large, if you have
+them enabled.)
 
-The details are explained throughout the module's documentation; 
-in particular see the documentation for DBIx::FileStore.
+The implementation and design details are explained throughout 
+the module's documentation; in particular see the 
+documentation for DBIx::FileStore.
 
 In a nutshell you can copy files into and out of the database 
 (respectively) using the commands 'fdbput' and 'fdbget'.
@@ -34,14 +35,15 @@ A) All the filenames in the filestore are in one flat address space.
 B) The filenames in the filestore cannot contain spaces. It's demo
    code after all -- we tried to keep it simple.
 
-For usage details, see the QUICKSTART.txt file in this folder 
+For usage details, see the QUICKSTART section of this file (below)
 and the documentation for the filestore scripts in the script/ 
 directory.
 
 For technical details, see the documentation for DBIx::FileStore
-and the utilities in script/
+and the utilities in script/ as well.
 
-There's also a video demo available at joshr.com/src/DBIx-FileStore/ 
+There's a video demo showing use of the DBIx::FileStore command
+line utilities available at joshr.com/src/DBIx-FileStore/ 
 that is provided in multiple formats. 
 
 INSTALLATION 

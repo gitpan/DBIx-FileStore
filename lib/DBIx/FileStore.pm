@@ -4,18 +4,17 @@ use strict;
 # this reads and writes files from the db.  
 use DBI;
 use Digest::MD5 qw( md5_base64 );
-use File::Temp;
 use File::Copy;
 
 use DBIx::FileStore::ConfigFile;
 
 use fields qw(  dbh dbuser dbpasswd 
-                dbname filetable blockstable  blocksize 
+                dbhost dbname filetable blockstable  blocksize 
                 verbose 
                 confhash
                 );
 
-our $VERSION = '0.09';  # version also mentioned in POD below.
+our $VERSION = '0.10';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -26,25 +25,39 @@ sub new {
 
     my $config_reader = new DBIx::FileStore::ConfigFile();
     my $conf = $self->{confhash} = $config_reader->read_config_file();
+
+    #TESTING WITH 1 BYTE BLOCKS
+    my $block_size = 1; # 1 byte blocks (!)
     
-    my $block_size = 512 * 1024;        # 512K blocks
-    #   with 900K blocks, we get: 
+    #my $block_size = 500 * 1024;        # 512K blocks
+    #   with 900K (or even 600K) blocks (inserting binary .rpm files), 
+    #   we get
+    #
     #   DBD::mysql::db do failed: Got a packet bigger than 
-    #   'max_allowed_packet' bytes at lib/DBIx/FileStore.pm line 165.
+    #   'max_allowed_packet' bytes at lib/DBIx/FileStore.pm line 191.
+    #
+    #   We think there's some encoding of the binary data going 
+    #   that inflates binary data during transmission.
+    #
+    
     $self->{blocksize}   = $block_size;
 
     $self->{dbuser}      = $conf->{dbuser} || die "$0: no dbuser set\n";
-    $self->{dbpasswd}    = $conf->{dbpasswd} || die "$0: no dbpasswd set\n";
+    $self->{dbpasswd}    = $conf->{dbpasswd} || warn "$0: no dbpasswd set\n";    # this could be ok.
     $self->{dbname}      = $conf->{dbname} || die "$0: no dbname set\n";
+
+    # dbhost defaults to 127.0.0.1
+    $self->{dbhost}      = $conf->{dbhost} || "127.0.0.1";
 
     $self->{filetable}   = "files";
     $self->{blockstable} = "fileblocks";
 
-    my $local_dsn = "DBI:mysql:database=$self->{dbname};host=127.0.0.1";
+    my $dsn = "DBI:mysql:database=$self->{dbname};host=$self->{dbhost}";
+
     my %attr  = ( RaiseError => 1, PrintError => 1, AutoCommit => 1 );  # for mysql
 
     $self->{dbh} = DBI->connect_cached( 
-        $local_dsn, $self->{dbuser}, $self->{dbpasswd}, \%attr);  
+        $dsn, $self->{dbuser}, $self->{dbpasswd}, \%attr);  
     $self->{dbh}->{mysql_auto_reconnect} = 1;   # auto reconnect
 
     return $self;
@@ -57,41 +70,30 @@ sub read_from_db {
 
     die "$0: name not ok: $fdbname" unless name_ok($fdbname);
 
-    my $fh = $self->{fh};
+    open( my $fh, ">", $pathname) || die "$0: can't open for output: $pathname\n";
+
 
     # this is a function used as a callback and called with each chunk of the data 
-    # into a temporary file
-    my $callback = sub {    
+    # into a temporary file.  $fh stay in context for the function (closure) below.
+    my $print_to_file_callback = sub {    
         # this is a closure, so $fh comes from the surrounding context
         my $content = shift;
-        unless($fh) {
-            my ($tfh, $filename) = File::Temp::tempfile( "FileDB-tmp-XXXXX", 
-                { DIR => "/tmp", UNLINK => 1 } );
-            $fh = $tfh;
-        }
         print $fh $content;
     };
 
 
     # read all our blocks, calling our callback for each one
-    my $ret = $self->_read_blocks_from_db( \&print_to_file_callback, $fdbname ); 
-        
-    # that's our filehandle!
-    $self->{fh} = $fh;
+    my $ret = $self->_read_blocks_from_db( $print_to_file_callback, $fdbname ); 
 
     # if we fetched *something* into our scoped $fh to the temp file,
     # then copy it to the destination they asked for, and delete
     # the temp file.
-    if ($fh) {  
-        seek($fh, 0, 0); # rewind tmp file
-        File::Copy::copy($fh, $pathname) || die "$0: Copy from tmpfile to $pathname failed: $!";
-        close($fh) if defined($fh);  # this 'close' should cause the associated file to be deleted
-    } else {
+    if (!$fh) {  
         warn "$0: not found in FileDB: $fdbname\n";
-    }
-
+    } 
     # clear our fh member
-    $self->{fh} = $fh = undef;
+    close($fh) if defined($fh);  # this 'close' should cause the associated file to be deleted
+    $fh = undef;
 
     # return number of bytes read.
     return $ret;    
@@ -202,8 +204,12 @@ sub write_to_db {
 # Note that this is a FUNCTION, not a METHOD
 sub name_ok {
     my $file = shift;
+    if (!defined($file) || $file eq "" ) {
+        warn "$0: Can't use empty filename\n";
+        return 0;
+    }
     if ($file && $file =~ /\s/) {
-        warn "$0: Can't use filedbname containing spaces\n";
+        warn "$0: Can't use filedbname containing whitespace\n";
         return 0;
     }
     if (length($file) > 75) {
@@ -223,7 +229,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.09
+Version 0.10
 
 =head1 SYNOPSIS
 
@@ -235,9 +241,10 @@ This code helps you do that.
 All the fdb tools in script/ use this library to 
 get at file names and contents in the database.
 
-To get started, see the files QUICKSTART.txt and README
-from the DBIx-FileStore distribution.  This document details 
-the module's implementation.
+To get started, see the README file (which includes a QUICKSTART
+guide) from the DBIx-FileStore distribution.  
+
+This document details the DBIx::FileStore module implementation.
 
 =head1 FILENAME NOTES
 
@@ -255,7 +262,7 @@ directory. (Although fdbls has some support for viewing files in the
 filestore as if they were in folders. See the docs on 'fdbls' 
 for details.)
 
-=head1 IMPLEMENTATION CAVEAT
+=head1 IMPLEMENTATION CAVEATS
 
 Note that DBIx::FileStore is a proof-of-concept demo.  It was 
 not designed as production code.
@@ -270,8 +277,8 @@ Perhaps instead, we'd have one entry in the 'files' table per file.
 
 In concrete terms, though, the storage overhead of doing it this way
 is about 100 bytes per block-- and each block can be up to 512K. 
-So assuming an average block size of 256K, the overhead is about 
-0.03%.
+Assuming an average block size of 256K, the total storage
+overhead is still only about 0.03%.
 
 =head1 IMPLEMENTATION
 
@@ -290,9 +297,10 @@ for example "filestorename.txt 00000".
 
 =head3 block
 
-The contents of the named block. Each block is currently to be 512K.
-Care must be taken to use blocks that are not larger than
-mysql buffers can handle (in particular, max_allowed_packet).
+The contents of the named block. Each block is currently set
+to be 512K.  Care must be taken to use blocks that are 
+not larger than mysql buffers can handle (in particular, 
+max_allowed_packet).
 
 =head3 lasttime
 
@@ -312,21 +320,24 @@ for example "filestorename.txt 00000".
 
 =head3 c_len 
 
-The content length of the whole file (sum of length of all the file's blocks).
+Content length. The content length of the complete file (sum of length of all the file's blocks).
 
 =head3 b_num
 
-The number of the block this row represents. The b_num is repeated as a five
-digit number at the end of the name field (see above). We denormalized
-the data like this so you can quickly find blocks by name or block number.
+Block number. The number of the block this row represents. The b_num is repeated as a five
+(or more) digit number at the end of the name field (see above). We denormalize
+the data like this so we can quickly find blocks by name or block number.
 
 =head3 b_md5
 
-The md5 checksum for the block (b is for 'block') represented by this row.
+Block md5. The md5 checksum for the block (b is for 'block') represented by this row.
+We use base64 encoding (which uses 0-9, a-z, A-Z, and a few other characters)
+to represent md5's because it's a little shorter than the hex 
+representation. (22 vs. 32 characters)
 
 =head3 c_md5
 
-The md5 checksum for the whole file (c is for 'content') represented by this row.
+Content md5. The base64 md5 checksum for the whole file (c is for 'content') represented by this row.
 
 =head3 lasttime
 
@@ -351,12 +362,12 @@ on the local filesystem.
 ** Intended for internal use by this module. ** 
 
 Fetches the blocks from the database for the file stored under $fdbname,
-and calls the $callback_function on each one after it is read.
+and calls the $callback_function on the data from each one after it is read.
 
 Locks the relevant tables while data is extracted. Locking should probably 
-be configurable by the caller.
+be configurable by the caller, or at least finer-grained.
 
-It also confirms that the MD5 checksum for each block and the file contents
+It also confirms that the base64 md5 checksum for each block and the file contents
 as a whole are correct. Die()'s with an error if a checksum doesn't match.
 
 =head2 my $bytecount = $self->write_to_db( $localpathname, $filestorename );
@@ -370,7 +381,7 @@ be configurable by the caller.
 Returns the number of bytes written. Dies with a message if the source
 file could not be read. 
 
-Note that it currently reads the file twice: once to compute the MD5 checksum
+Note that it currently reads the file twice: once to compute the md5 checksum
 before insterting it, and a second time to insert the blocks.
 
 =head1 FUNCTIONS
@@ -389,7 +400,7 @@ Josh Rabinowitz, C<< <Josh Rabinowitz> >>
 You should probably read the documentation for the various filestore command-line
 tools:
 
-  fdbcat, fdbcp, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbstat, and fdbtidy.
+  fdbcat, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbstat, and fdbtidy.
   fdbslurp (which is the reverse of fdbcat) was not completed.
 
 
@@ -416,3 +427,4 @@ See http://dev.perl.org/licenses/ for more information.
 =cut
 
 1; # End of DBIx::FileStore
+

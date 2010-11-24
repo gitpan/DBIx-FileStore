@@ -18,21 +18,25 @@ sub main {
         "verbose" => \$verbose,
     ) || die Usage();
 
-    my $filestore = new DBIx::FileStore();
-    my $dbh = $filestore->{dbh};
-    my $filetable = $filestore->{filetable};        # probably "files"
+    my $filestore   = new DBIx::FileStore();
+    my $dbh         = $filestore->{dbh};
+    my $filetable   = $filestore->{filetable};        # probably "files"
     my $blockstable = $filestore->{blockstable};    # probably "fileblocks"
 
-    die "fdbrm: pass dbfilename(s) to delete\n" unless @ARGV;
-    for(@ARGV) {
-        warn "fdbrm: Error: not using '$_' as dbfilename to remove\n" && next unless $_;
+    die( "fdbrm: pass dbfilename(s) to delete\n" . Usage() ) unless @ARGV;
+
+    for my $name (@ARGV) {
+        unless( $filestore->name_ok( $name )) {
+            warn "fdbrm: Error: not using '$name' as dbfilename to remove\n";
+            next;
+        }
         for my $table ( ( $filetable, $blockstable ) ) {
             # THIS CODE SHOULD BE MOVED INTO A DBIx::FileStore method.
-            my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$_ %" ));
+            my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$name %" ));
             if($rv) {
-                print "fdbrm: $table: deleted $_ ($rv blocks)\n" if $verbose;
+                print "fdbrm: $table: deleted $name ($rv blocks)\n" if $verbose;
             } else {
-                warn  "fdbrm: no blocks to delete for $table:$_\n";
+                warn  "fdbrm: no blocks to delete for $table:$name\n";
             }
         }
     }

@@ -33,7 +33,7 @@ sub read_config_file {
     my $etc_conffile = "/etc/fdb.conf";
     unless( $filename ) {
         # explicit sub{} like this for perl 5.6.2
-        $filename = first( sub { -e shift }, $user_dotfile, $etc_conffile );
+        $filename = first( sub { -e }, $user_dotfile, $etc_conffile );
     }
 
     unless($filename) {

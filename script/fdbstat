@@ -10,10 +10,14 @@ my $human = 0;
 
 main();
 
+sub Usage {
+    "fdbstat [-human]: show stats about files stored with DBIx::FileStore.\n";
+}
+
 sub main {
     GetOptions(
         "human!" => \$human,
-    ) || die "fdbstat [-human]: Doesn't understand other options yet.\n";
+    ) || die Usage();
 
     my $filestore = new DBIx::FileStore(); 
 
@@ -33,7 +37,7 @@ sub main {
     
     # new way, respecting --human param
     printf( "fdbstat: DB has %s in $files files stored in $blocks blocks.\n",
-            $human ? convert_bytes_to_human_size( $bytes) : "$bytes bytes" );
+            $human ? convert_bytes_to_human_size($bytes) : "$bytes bytes" );
 }
 
 =pod

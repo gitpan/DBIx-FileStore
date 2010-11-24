@@ -13,7 +13,8 @@ sub Usage {
     "  Copies files into of the filestore from the filesystem.\n" .
     "  --local=filename specifies source on the filesystem different\n".
     "  from target name in filestore and can only be used with a\n" .
-    "  single filename\n";
+    "  single filename\n" . 
+    "  NOTE: currently will place dup files into the filestore!\n";
 }
 
 sub main {
