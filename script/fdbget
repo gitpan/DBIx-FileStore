@@ -25,13 +25,7 @@ sub main {
     die "fdbget: can't use --local option with multiple files\n" if (@ARGV > 1 && $localname);
 
     for my $filename (@ARGV) {
-        unless ($filestore->name_ok($filename)) {
-            warn "Skipping file named $filename\n";
-            next;
-        }
-        # store it under its own filename, or $localname if set
-        eval { $filestore->read_from_db($localname || $filename, $filename); };
-        warn "fdbget: Error reading $filename: $@" if $@;
+        $filestore->read_from_db($localname || $filename, $filename); 
     }
 }
 

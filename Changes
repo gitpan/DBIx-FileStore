@@ -1,5 +1,10 @@
 Revision history for DBIx-FileStore
 
+0.12    2010/11/28  3:01PM
+        Factor more code from command line tools to 
+          DBIx::FileStore methods.
+        Changes to test code and documentation.
+
 0.11    2010/11/24  3:41PM
         Revert default block size to 512K.
 

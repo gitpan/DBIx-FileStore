@@ -12,3 +12,6 @@ dbuser=root
 dbpasswd=password
 dbname=fdb
 
+# and optionally, a dbhost. Defaults to 127.0.0.1
+# dbhost=hostname.example.com
+

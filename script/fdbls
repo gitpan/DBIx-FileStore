@@ -48,14 +48,9 @@ sub main {
         # fetch all files with b_num = 0-- either all of them, or the ones
         # matching $name
         if ($name eq "") {
-            $files = $filestore->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
-                "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
-                where b_num=0 order by name");
+            $files = $filestore->get_all_filenames();
         } else {
-            my $pattern = $name . "%"; 
-            $files = $filestore->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
-                "select name, c_len, c_md5, lasttime+0 from $filestore->{filetable} 
-                 where name like ? and b_num=0 order by name", {}, $pattern);
+            $files = $filestore->get_filenames_matching_prefix( $name );
         }
 
         #print Dumper($files);

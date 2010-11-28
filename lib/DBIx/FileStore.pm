@@ -14,7 +14,7 @@ use fields qw(  dbh dbuser dbpasswd
                 confhash
                 );
 
-our $VERSION = '0.11';  # version also mentioned in POD below.
+our $VERSION = '0.12';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -63,6 +63,36 @@ sub new {
     return $self;
 }
 
+sub get_all_filenames {
+    my ($self) = @_;
+    my $files = $self->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
+                "select name, c_len, c_md5, lasttime+0 from $self->{filetable} 
+                where b_num=0 order by name");
+    return $files;
+}
+sub get_filenames_matching_prefix {
+    my ($self, $name) = @_;
+    my $pattern = $name . "%"; 
+    my $files = $self->{dbh}->selectall_arrayref( # lasttime + 0 gives us an int back
+        "select name, c_len, c_md5, lasttime+0 from $self->{filetable} 
+         where name like ? and b_num=0 order by name", {}, $pattern);
+    return $files;
+}
+
+
+sub print_blocks_from_db_to_filehandle {
+    my ($self, $filehandle, $fdbname) = @_;
+    die "$0: name not ok: $fdbname" unless name_ok($fdbname);
+    my $print_to_filehandle_callback = sub {    
+        # this is a closure, so $fh comes from the surrounding context
+        my $content = shift;
+        print $filehandle $content;
+    };
+    # read all our blocks, calling our callback for each one
+    my $ret = $self->_read_blocks_from_db( $print_to_filehandle_callback, $fdbname ); 
+    return $ret;
+}
+
 
 # reads the content into $pathname, returns the length of the data read.
 sub read_from_db {
@@ -104,6 +134,7 @@ sub read_from_db {
 sub _read_blocks_from_db {
     my ($self, $callback, $fdbname) = @_;
         # callback is called on each block, like &$callback( $block )
+    die "$0: name not ok: $fdbname" unless name_ok($fdbname);
     my $dbh = $self->{dbh};
     my $verbose = $self->{verbose};
     my $filetable = $self->{filetable};
@@ -199,6 +230,50 @@ sub write_to_db {
     return $total_length;
 }
 
+
+sub rename_file {
+    my ($self, $from, $to) = @_;
+    die "$0: name not ok: $from" unless name_ok($from);
+    die "$0: name not ok: $to" unless name_ok($to);
+    # renames the rows in the filetable and the blockstable
+    my $dbh = $self->{dbh};
+    $dbh->do("lock tables $self->{filetable} write, $self->{blockstable} write");
+
+    for my $table ( ( $self->{filetable}, $self->{blockstable} ) ) {
+        my $sql = "select name from $table where name like ?";
+        $sql .= " order by b_num" if $table eq $self->{filetable};
+
+        my $files = $dbh->selectall_arrayref( $sql, {}, $from . " %");
+        for my $f (@$files) {
+            (my $num = $f->[0]) =~ s/.* //;
+            print "$0: Moving $table:$f->[0], (num $num) to '$to $num'...\n" if $self->{verbose};
+            $dbh->do("update $table set name=? where name=?", {}, "$to $num", $f->[0]);
+        }
+    }
+
+    $dbh->do("unlock tables");
+    return 1;
+}
+
+sub delete_file {
+    my ($self, $name) = @_;
+    die "$0: name not ok: $name" unless name_ok($name);
+
+    my $dbh         = $self->{dbh};
+    my $filetable   = $self->{filetable};        # probably "files"
+    my $blockstable = $self->{blockstable};    # probably "fileblocks"
+    for my $table ( ( $filetable, $blockstable ) ) {
+        my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$name %" ));
+        if($rv) {
+            print "$0: $table: deleted $name ($rv blocks)\n" if $self->{verbose};
+        } else {
+            warn  "$0: no blocks to delete for $table:$name\n" if $self->{verbose};
+        }
+    }
+    return 1;
+}
+
+
 # warns and returns 0 if passed filename ending with like '/tmp/file 1'
 # else returns 1, ie, that the name is OK
 # Note that this is a FUNCTION, not a METHOD
@@ -229,7 +304,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =head1 SYNOPSIS
 
@@ -352,10 +427,29 @@ the db schema used.
 
 returns a new DBIx::FileStore object
 
+=head2 my $fileinfo_ref = $filestore->get_all_filenames()
+
+Returns a list of references to data about all the files in the
+filestore. 
+
+Each row consist of the following columns:
+  name, c_len, c_md5, lasttime_as_int
+
+=head2 my $fileinfo_ref = get_filenames_matching_prefix( $prefix );
+
+Returns a list of references to data about the files in the 
+filestore whose name matches the prefix $prefix.
+
+Returns a list of references in the same format as get_all_filenames().
+
 =head2 my $bytecount = $filestore->read_from_db( "filesystemname.txt", "filestorename.txt" );
 
 Copies the file 'filestorename.txt' from the filestore to the file filesystemname.txt
 on the local filesystem.
+
+=head2 my $bytecount = $filestore->print_blocks_from_db_to_filehandle( $fh, $fdbname );
+
+Prints the file 'filestorename.txt' from the filestore to the the filehandle.
 
 =head2 my $bytecount = $filestore->_read_blocks_from_db( $callback_function, $fdbname );
 
@@ -384,6 +478,15 @@ file could not be read.
 Note that it currently reads the file twice: once to compute the md5 checksum
 before insterting it, and a second time to insert the blocks.
 
+=head2 my $ok = $self->rename_file( $from, $to );
+
+Renames the file in the database from $from to $to.
+Returns 1;
+
+=head2 my $ok = $self->delete_file( $filename );
+
+Removes data named $filename from the filestore.
+
 =head1 FUNCTIONS
 
 =head2 my $filename_ok = DBIx::FileStore::name_ok( $fdbname )
@@ -401,10 +504,10 @@ You should probably read the documentation for the various filestore command-lin
 tools:
 
   fdbcat, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbstat, and fdbtidy.
-  fdbslurp (which is the reverse of fdbcat) was not completed.
+  fdbslurp (which is the opposite of fdbcat) was not completed.
 
 
-You can also look for information at:
+You can also read the documentation at:
 
 =over 4
 

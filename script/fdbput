@@ -32,9 +32,6 @@ sub main {
         unless(-e $file_to_read) {
             warn "fdbput: file doesn't exist on fs: $file_to_read\n" && next;
         } 
-        unless ($filestore->name_ok($filename)) {
-            warn "fdbput: filename not ok, skipped: $filename\n";
-        }
         eval { $filestore->write_to_db($file_to_read, $filename); }; 
         # read it from $localname if set, otherwise look in the same name they call it
         

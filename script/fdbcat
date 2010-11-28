@@ -21,17 +21,12 @@ sub main {
     die( "fdbcat: pass files to cat from DB\n" . Usage() ) unless @ARGV;
 
     for my $filename (@ARGV) {
-        unless ($dbfs->name_ok($name)) {
-            warn "Skipping invalid file named $name\n";
+        unless ($dbfs->name_ok($filename)) {
+            warn "Skipping invalid file named $filename\n";
             next;
         }
-        eval { $dbfs->_read_blocks_from_db(\&ourprintcallback, $name ); };
-        warn "fdbcat: Error reading $_: $@" if $@;
+        $dbfs->print_blocks_from_db_to_filehandle( *STDOUT, $filename );
     }
-}
-
-sub ourprintcallback {
-    print $_[0];
 }
 
 __END__     
