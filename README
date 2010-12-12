@@ -6,14 +6,14 @@ files stored in a mysql database.
 "What!?" you say. "You're not supposed to store files directly
 in a database!"
 
-And I say, "Yes, friend, you're right. But sometimes you just 
+And I'd say, "Yes, friend, you're right. But sometimes you just 
 want to anyway." I actually wrote this just to see how well it 
 would work.
 
-The answer is that it works fine. Modulus the fact that you're
+The answer is that it works fine! Modulus the fact that you're
 storing large blobs (up to 500K) in a database. (In particular, 
 it might make your mysql transaction logs large, if you have
-them enabled.)
+them enabled...)
 
 The implementation and design details are explained throughout 
 the module's documentation; in particular see the 
@@ -25,6 +25,8 @@ In a nutshell you can copy files into and out of the database
 'fdbmv' and 'fdbrm' are also provided, along
 with a few other utilities in the script/ directory.
 
+See the QUICKSTART section below if you just want to get started.
+
 The important things to note are: 
  
 A) All the filenames in the filestore are in one flat address space.
@@ -32,18 +34,20 @@ A) All the filenames in the filestore are in one flat address space.
    in a folder called /a/b/ (although fdbls does offer some support
    for directory-like viewing of files with common prefixes).
 
-B) The filenames in the filestore cannot contain spaces. It's demo
-   code after all -- we tried to keep it simple.
+B) The filenames in the filestore cannot contain spaces. 
+   Spaces in filenames suck. Respectfully. If you disagree and 
+   want me to add support for spaces in filenames, let me 
+   know. 
 
 For usage details, see the QUICKSTART section of this file (below)
 and the documentation for the filestore scripts in the script/ 
 directory.
 
 For technical details, see the documentation for DBIx::FileStore
-and the utilities in script/ as well.
+and for the utilities in script/ as well.
 
 There's a video demo showing use of the DBIx::FileStore command
-line utilities available at joshr.com/src/DBIx-FileStore/ 
+line utilities available at --> http://joshr.com/src/DBIx-FileStore/ 
 that is provided in multiple formats. 
 
 INSTALLATION 
@@ -61,51 +65,56 @@ and install process:
 QUICKSTART
 
 Here we give a quickstart guide. We assume you've installed 
-DBIx::FileStore as in the previous section. To get the database setup: 
+DBIx::FileStore as in the previous section. To get the filestore
+set up: 
   
-  1) Have Mysql installed and running. You'll also DBI and DBD::mysql.
+  1) Have Mysql installed and running. You'll also need DBI and  
+     DBD::mysql.
   
   2) Choose what database, dbuser and dbpasswd you're going to use 
-     to access mysql.  (DBIx-Filestore uses a table called 'files' 
-     and another called 'fileblocks' which are created in step 4. 
+     to access mysql.  (DBIx-Filestore uses these to create tables
+     called 'files' and 'fileblocks' which are created in step 4. 
      See table-definitions.sql and the documentation for 
      DBIx::FileStore for technical details.)
   
   3) Copy the file fdb.conf-sample to either /etc/fdb.conf or ~/.fdbrc, 
      and edit it to specify your dbname, dbuser and dbpasswd.
   
-  4) Set up the needed tables in mysql via a command like:
-         mysql dbname < table-definitions.sql
+  4) Create the the needed tables in mysql, in the database you 
+     specified above, via a command like:
+         % mysql dbname < table-definitions.sql
   
-  5) You now have the DBIx-FileStore system installed. 
+  5) You now have the DBIx-FileStore system installed.  
+     It's that simple!
   
-  6) As a simple test, let's copy a file
-     into the filestore:
+  6) As a basic test, let's use the filestore scripts to put 
+     a file into the filestore. 
   
          % cd /etc/
          % fdbput hosts
   
      That copies the file '/etc/hosts' into the filestore 
-     under the name 'hosts'.
+     under the name 'hosts'.  You can use the --local
+     option to give files in the filestore different names
+     than they have on the filesystem. (See the documentation for
+     fdbput and the other scripts for details about their 
+     command line options).
+
      You can see it in the database with fdbls:
   
          % fdbls
          hosts
   
      fdbls also has a few interesting options, including -h, -l, and 
-     -m, which shows the file's size, update time (in the filestore),
-     and MD5 checksum:
+     -m, which show the file's size (formatted for humans), 
+     update time (in the filestore), and MD5 checksum, respectively:
   
          % fdbls -h -l -m hosts
          7.44K 20101116 19:28 fp911CO8MLqOLmCGtmx7wA hosts
+
+     You can view a file's contents via the command fdbcat:
   
-     You can view its contents via the command fdbcat:
-  
-         % fdbcat hosts | head -7
-         # /etc/hosts    hardwired addresses.
-         # DO NOT EDIT! CHANGES WILL BE OVERWRITTEN ON THE NEXT RUN OF
-         # /home/admin/bin/setup/hosts-setup
-         # 
+         % fdbcat hosts | head -3
          127.0.0.1   localhost
          255.255.255.255 broadcasthost
          ::1             localhost 
@@ -115,7 +124,7 @@ DBIx::FileStore as in the previous section. To get the database setup:
          % fdbstat
          fdbstat: DB has 7623 bytes in 1 files stored in 1 blocks.
 
-     Using you can use 'fdbrm' to remove files from the filestore:
+     And you can use 'fdbrm' to remove files from the filestore:
     
          % fdbrm hosts
   

@@ -12,9 +12,10 @@ use fields qw(  dbh dbuser dbpasswd
                 dbhost dbname filetable blockstable  blocksize 
                 verbose 
                 confhash
+                uselocks
                 );
 
-our $VERSION = '0.12';  # version also mentioned in POD below.
+our $VERSION = '0.13';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -30,17 +31,21 @@ sub new {
     #my $block_size = 1; # 1 byte blocks (!)
     
     my $block_size = 500 * 1024;        # 512K blocks
-    #   with 900K (or even 600K) blocks (inserting binary .rpm files), 
+    $self->{blocksize}   = $block_size;
+    #   with 900K (or even 600K) blocks, when inserting binary .rpm files, 
     #   we get
     #
-    #   DBD::mysql::db do failed: Got a packet bigger than 
-    #   'max_allowed_packet' bytes at lib/DBIx/FileStore.pm line 191.
+    #   DBD::mysql::db do failed: Got a packet bigger than 'max_allowed_packet' bytes.
     #
     #   We think there's some encoding of the binary data going 
-    #   that inflates binary data during transmission.
+    #   that inflates binary data during transmission. 
     #
     
-    $self->{blocksize}   = $block_size;
+
+    # WE DON'T USE LOCKS ANY MORE. Like a real filesystem, you might
+    # get interspersed or truncated information if the filesystem is
+    # being changed while you're reading!
+    $self->{uselocks}    = 0;
 
     $self->{dbuser}      = $conf->{dbuser} || die "$0: no dbuser set\n";
     $self->{dbpasswd}    = $conf->{dbpasswd} || warn "$0: no dbpasswd set\n";    # this could be ok.
@@ -142,7 +147,7 @@ sub _read_blocks_from_db {
     my @params = ( $fdbname . ' %' );
     #print "CMD = $cmd -- @params\n";
     warn "$0: Fetching rows $fdbname" if $verbose;
-    $dbh->do("lock tables $self->{filetable} read, $self->{blockstable} read");
+    $self->_lock_tables();
     my $sth = $dbh->prepare($cmd);
     my $rv =  $sth->execute( @params );
     my $rownum = 0;
@@ -175,7 +180,7 @@ sub _read_blocks_from_db {
 
         $rownum++;
     }
-    $dbh->do("unlock tables");
+    $self->_unlock_tables();
     return $c_len;  # for your inspection
 }
 
@@ -205,7 +210,7 @@ sub write_to_db {
     my $dbh = $self->{dbh};
     my $filetable = $self->{filetable};
     my $blockstable = $self->{blockstable};
-    $dbh->do("lock table $filetable write, $blockstable write");
+    $self->_lock_tables();
     for( my ($bytes,$part,$block) = (0,0,"");           # init
     $bytes = read($fh, $block, $self->{blocksize});    # test 
     $part++, $block="" ) {                              # increment
@@ -224,12 +229,24 @@ sub write_to_db {
             $name, $block);
         #warn "Wrote $bytes bytes to block $pathname...\n";
     }
-    $dbh->do("unlock tables");
+    $self->_unlock_tables();
     close ($fh) || die "$0: couldn't close: $pathname\n";
     print "\n" if $verbose;
     return $total_length;
 }
 
+sub _lock_tables {
+    my $self = shift;
+    if ($self->{uselocks}) {
+        $self->{dbh}->do("lock tables $self->{filetable} write, $self->{blockstable} write");
+    }
+}
+sub _unlock_tables {
+    my $self = shift;
+    if ($self->{uselocks}) {
+        $self->{dbh}->do("unlock tables");
+    }
+}
 
 sub rename_file {
     my ($self, $from, $to) = @_;
@@ -237,7 +254,7 @@ sub rename_file {
     die "$0: name not ok: $to" unless name_ok($to);
     # renames the rows in the filetable and the blockstable
     my $dbh = $self->{dbh};
-    $dbh->do("lock tables $self->{filetable} write, $self->{blockstable} write");
+    $self->_lock_tables();
 
     for my $table ( ( $self->{filetable}, $self->{blockstable} ) ) {
         my $sql = "select name from $table where name like ?";
@@ -251,7 +268,7 @@ sub rename_file {
         }
     }
 
-    $dbh->do("unlock tables");
+    $self->_unlock_tables();
     return 1;
 }
 
@@ -304,7 +321,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =head1 SYNOPSIS
 
@@ -337,23 +354,99 @@ directory. (Although fdbls has some support for viewing files in the
 filestore as if they were in folders. See the docs on 'fdbls' 
 for details.)
 
-=head1 IMPLEMENTATION CAVEATS
 
-Note that DBIx::FileStore is a proof-of-concept demo.  It was 
-not designed as production code.
+=head1 METHODS
 
-That having been said, it works quite nicely. 
+=head2 new DBIx::FileStore()
 
-There are some design choices that we've debated, though.
+my $filestore = new DBIx::FileStore();
 
-In particular, we might reconsider having one row in the 'files' 
-table for each block stored in the 'fileblocks' table. 
-Perhaps instead, we'd have one entry in the 'files' table per file.
+returns a new DBIx::FileStore object
 
-In concrete terms, though, the storage overhead of doing it this way
-is about 100 bytes per block-- and each block can be up to 512K. 
-Assuming an average block size of 256K, the total storage
-overhead is still only about 0.03%.
+=head2 get_all_filenames()
+
+my $fileinfo_ref = $filestore->get_all_filenames()
+
+Returns a list of references to data about all the files in the
+filestore. 
+
+Each row consist of the following columns:
+  name, c_len, c_md5, lasttime_as_int
+
+=head2 get_filenames_matching_prefix( $prefix )
+
+my $fileinfo_ref = get_filenames_matching_prefix( $prefix );
+
+Returns a list of references to data about the files in the 
+filestore whose name matches the prefix $prefix.
+
+Returns a list of references in the same format as get_all_filenames().
+
+=head2 read_from_db( $filesystem_name, $storage_name);
+
+my $bytecount = $filestore->read_from_db( "filesystemname.txt", "filestorename.txt" );
+
+Copies the file 'filestorename.txt' from the filestore to the file filesystemname.txt
+on the local filesystem.
+
+=head2 print_blocks_from_db_to_filehandle()
+
+my $bytecount = $filestore->print_blocks_from_db_to_filehandle( $fh, $fdbname );
+
+Prints the file 'filestorename.txt' from the filestore to the the filehandle.
+
+=head2 _read_blocks_from_db( $callback_function, $fdbname );
+
+my $bytecount = $filestore->_read_blocks_from_db( $callback_function, $fdbname );
+
+** Intended for internal use by this module. ** 
+
+Fetches the blocks from the database for the file stored under $fdbname,
+and calls the $callback_function on the data from each one after it is read.
+
+Locks the relevant tables while data is extracted. Locking should probably 
+be configurable by the caller, or at least finer-grained.
+
+It also confirms that the base64 md5 checksum for each block and the file contents
+as a whole are correct. Die()'s with an error if a checksum doesn't match.
+
+=head2 write_to_db( $localpathname, $filestorename );
+
+my $bytecount = $self->write_to_db( $localpathname, $filestorename );
+
+Copies the file $localpathname from the filesystem to the name
+$filestorename in the filestore.
+
+Locks the relevant tables while data is extracted. Locking should probably 
+be configurable by the caller.
+
+Returns the number of bytes written. Dies with a message if the source
+file could not be read. 
+
+Note that it currently reads the file twice: once to compute the md5 checksum
+before insterting it, and a second time to insert the blocks.
+
+=head2 rename_file( $from, $to );
+
+my $ok = $self->rename_file( $from, $to );
+
+Renames the file in the database from $from to $to.
+Returns 1;
+
+=head2 delete_file( $filename );
+
+my $ok = $self->delete_file( $filename );
+
+Removes data named $filename from the filestore.
+
+=head1 FUNCTIONS
+
+=head2 name_ok( $fdbname )
+
+my $filename_ok = DBIx::FileStore::name_ok( $fdbname )
+
+Checks that the name $fdbname is acceptable for using as a name
+in the filestore. Must not contain spaces or be over 75 chars.
 
 =head1 IMPLEMENTATION
 
@@ -385,7 +478,7 @@ The timestamp of when this block was inserted into the DB or updated.
 
 The files table has several fields. There is one row in the files table 
 for each row in the fileblocks table-- not one per file (see IMPLEMENTATION 
-CAVEATS, above). The fields in the files table are:
+CAVEATS, below). The fields in the files table are:
 
 =head3 name 
 
@@ -421,78 +514,27 @@ The timestamp of when this row was inserted into the DB or updated.
 =head2 See the file 'table-definitions.sql' for more details about 
 the db schema used.
 
-=head1 METHODS
+=head1 IMPLEMENTATION CAVEATS
 
-=head2 my $filestore = new DBIx::FileStore()
+DBIx::FileStore is what I would consider production-grade code, 
+but the overall wisdom of storing files in blobs in a mysql database
+may be questionable (for good reason). 
 
-returns a new DBIx::FileStore object
+That having been said, if you have a good reason to do so, as long 
+as you understand the repercussions of storing files in 
+your mysql database, then this toolkit offers a stable and 
+flexible backend for binary data storage, and it works quite nicely. 
 
-=head2 my $fileinfo_ref = $filestore->get_all_filenames()
+If we were to redesign the system, in particular we might reconsider 
+having one row in the 'files' table for each block stored in the 
+'fileblocks' table.  Perhaps instead, we'd have one entry in 
+the 'files' table per file.
 
-Returns a list of references to data about all the files in the
-filestore. 
-
-Each row consist of the following columns:
-  name, c_len, c_md5, lasttime_as_int
-
-=head2 my $fileinfo_ref = get_filenames_matching_prefix( $prefix );
-
-Returns a list of references to data about the files in the 
-filestore whose name matches the prefix $prefix.
-
-Returns a list of references in the same format as get_all_filenames().
-
-=head2 my $bytecount = $filestore->read_from_db( "filesystemname.txt", "filestorename.txt" );
-
-Copies the file 'filestorename.txt' from the filestore to the file filesystemname.txt
-on the local filesystem.
-
-=head2 my $bytecount = $filestore->print_blocks_from_db_to_filehandle( $fh, $fdbname );
-
-Prints the file 'filestorename.txt' from the filestore to the the filehandle.
-
-=head2 my $bytecount = $filestore->_read_blocks_from_db( $callback_function, $fdbname );
-
-** Intended for internal use by this module. ** 
-
-Fetches the blocks from the database for the file stored under $fdbname,
-and calls the $callback_function on the data from each one after it is read.
-
-Locks the relevant tables while data is extracted. Locking should probably 
-be configurable by the caller, or at least finer-grained.
-
-It also confirms that the base64 md5 checksum for each block and the file contents
-as a whole are correct. Die()'s with an error if a checksum doesn't match.
-
-=head2 my $bytecount = $self->write_to_db( $localpathname, $filestorename );
-
-Copies the file $localpathname from the filesystem to the name
-$filestorename in the filestore.
-
-Locks the relevant tables while data is extracted. Locking should probably 
-be configurable by the caller.
-
-Returns the number of bytes written. Dies with a message if the source
-file could not be read. 
-
-Note that it currently reads the file twice: once to compute the md5 checksum
-before insterting it, and a second time to insert the blocks.
-
-=head2 my $ok = $self->rename_file( $from, $to );
-
-Renames the file in the database from $from to $to.
-Returns 1;
-
-=head2 my $ok = $self->delete_file( $filename );
-
-Removes data named $filename from the filestore.
-
-=head1 FUNCTIONS
-
-=head2 my $filename_ok = DBIx::FileStore::name_ok( $fdbname )
-
-Checks that the name $fdbname is acceptable for using as a name
-in the filestore. Must not contain spaces or be over 75 chars.
+In concrete terms, though, the storage overhead of doing it this way
+(which only affects files larger than the block size, which defaults
+to 512K) is about 100 bytes per block.  Assuming files larger than
+512K, and with a conservative average block size of 256K, the extra 
+storage overhead of doing it this way is still only about 0.03%. 
 
 =head1 AUTHOR
 

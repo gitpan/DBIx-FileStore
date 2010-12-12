@@ -7,7 +7,6 @@ lib/DBIx/FileStore/ConfigFile.pm
 lib/DBIx/FileStore/UtilityFunctions.pm
 Makefile.PL
 MANIFEST
-mkmanifest
 README
 script/fdbcat
 script/fdbget

@@ -1,5 +1,15 @@
 Revision history for DBIx-FileStore
 
+0.13    2010/12/12  4:15PM
+        Don't distribute mkmanifest.
+        Added t/actualtest.t, which tests putting files
+        in the filestore.
+        Added t/exes.t test, which checks that all
+        the scripts at least compile.
+        README and DBIx::FileStore documentation improved,
+        reordered, and rewritten.
+        Don't lock database tables by default during changes.
+        
 0.12    2010/11/28  3:01PM
         Factor more code from command line tools to 
           DBIx::FileStore methods.
