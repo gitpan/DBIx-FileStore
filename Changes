@@ -1,8 +1,14 @@
 Revision history for DBIx-FileStore
 
-0.14    2012/12/23  5:10PM
+0.16    2012/12/23  5:10PM
+        Fix version numbers to match everywhere
+
+0.15    2012/12/23  5:10PM
         Use Dist::Zilla in place of Makefile.PL directly.
         Update test to use new location of fdb* scripts
+
+0.14    -
+        No such release
 
 0.13    2010/12/12  4:15PM
         Don't distribute mkmanifest.
