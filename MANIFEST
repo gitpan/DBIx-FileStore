@@ -23,7 +23,6 @@ ignore.txt
 lib/DBIx/FileStore.pm
 lib/DBIx/FileStore/ConfigFile.pm
 lib/DBIx/FileStore/UtilityFunctions.pm
-mkmanifest
 t/00-load.t
 t/actualtest.t
 t/boilerplate.t
