@@ -11,7 +11,7 @@ plan skip_all => "Test::Pod $min_tp required for testing POD" if $@;
 
 #all_pod_files_ok();
 
-my @poddirs = qw( lib script );
+my @poddirs = qw( lib bin );
 all_pod_files_ok( all_pod_files( @poddirs ) );
 
 

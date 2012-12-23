@@ -4,7 +4,7 @@ use strict;
 use File::Temp;
 use File::Slurp qw(read_file);
 
-# tests that all the perl modules matchine ./script/fdb* compile 
+# tests that all the perl modules matchine ./bin/fdb* compile 
 
 # the GLOBAL LIST of files we're going to test
 our @files;
@@ -18,7 +18,7 @@ my $child_signal = 0;
 BEGIN {
 	use strict;
 
-    @files = glob( "script/fdb*" );
+    @files = glob( "bin/fdb*" );
 
     use Test::More;# qw(no_plan); 
     # two tests for each file: with and without the current %ENV
@@ -39,9 +39,10 @@ sub main {
         ok(1);
         exit(0);
     }
-    my $num_tests = scalar(@files); 
+    my $num_tests = scalar(@files) + 1; 
     plan tests => $num_tests;
 
+    ok( scalar( @files ), "Found scripts to test" );
     for my $file (@files) {
         chomp($file);
         test_file( $file, "" ); # test it, with the current %ENV

@@ -16,7 +16,17 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => "6.30"
   },
   "DISTNAME" => "DBIx-FileStore",
-  "EXE_FILES" => [],
+  "EXE_FILES" => [
+    "bin/fdbtidy",
+    "bin/fdbput",
+    "bin/fdbls",
+    "bin/fdbslurp",
+    "bin/fdbget",
+    "bin/fdbmv",
+    "bin/fdbstat",
+    "bin/fdbcat",
+    "bin/fdbrm"
+  ],
   "LICENSE" => "perl",
   "NAME" => "DBIx::FileStore",
   "PREREQ_PM" => {
@@ -29,7 +39,7 @@ my %WriteMakefileArgs = (
     "List::Util" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.16",
+  "VERSION" => "0.17",
   "test" => {
     "TESTS" => "t/*.t"
   }

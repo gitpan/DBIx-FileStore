@@ -1,5 +1,9 @@
 Revision history for DBIx-FileStore
 
+0.17    2012/12/23  5:25
+        move scripts to where build systems expect, from script/ to bin/
+        test that self-tests can _find_ scripts, too.
+
 0.16    2012/12/23  5:10PM
         Fix version numbers to match everywhere
 

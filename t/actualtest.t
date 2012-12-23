@@ -24,22 +24,22 @@ if ( $ENV{RELEASE_TESTING} ) {
 $ENV{PATH} = "/usr/bin:/bin";
 
 #1) TEST fdbls: no files in /testfolder
-my @out = btick( "script/fdbls /testfolder/" );
+my @out = btick( "bin/fdbls /testfolder/" );
 ok( scalar(@out) == 0, "fdbls: no files in /testfolder/ (@out)" );
 
 #2) test fdbput - put a file in /testfolder/
-mysystem( "script/fdbput -l script/fdbput /testfolder/fdbput" );
-my @files = btick( "script/fdbls /testfolder/fdbput" );
+mysystem( "bin/fdbput -l bin/fdbput /testfolder/fdbput" );
+my @files = btick( "bin/fdbls /testfolder/fdbput" );
 ok( scalar(@files) == 1, "fdbput: file in /testfolder/ (@files)" );
 
 #3) test fdbmv - rename a file in /testfolder/
-mysystem( "script/fdbmv /testfolder/fdbput /testfolder/fdbput-was" );
-@files = btick( "script/fdbls /testfolder/fdbput-was" );
+mysystem( "bin/fdbmv /testfolder/fdbput /testfolder/fdbput-was" );
+@files = btick( "bin/fdbls /testfolder/fdbput-was" );
 ok( scalar(@files) == 1, "fdbmv: fdbput-was in /testfolder/ (@files)" );
 
 #4) test fdbrm - remove a file in /testfolder/
-mysystem( "script/fdbrm /testfolder/fdbput-was" );
-@files = btick( "script/fdbls /testfolder/" );
+mysystem( "bin/fdbrm /testfolder/fdbput-was" );
+@files = btick( "bin/fdbls /testfolder/" );
 ok( scalar(@files) == 0, "fdbrm: no file /testfolder/ (@files)" );
         
 sub mysystem {

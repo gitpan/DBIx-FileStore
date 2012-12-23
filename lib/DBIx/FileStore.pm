@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.16';  # version also mentioned in POD below.
+our $VERSION = '0.17';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -321,7 +321,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.16
+Version 0.17
 
 =head1 SYNOPSIS
 
