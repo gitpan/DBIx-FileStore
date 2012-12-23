@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w 
+
+use strict;
+use Getopt::Long; 
+use File::Basename;
+
+my $prog = basename($0);
+my $verbose;
+#my $dryrun;
+
+# Usage() : returns usage information
+sub Usage {
+    "$prog [--verbose]: uses ExtUtils::Manifest to autogen a MANIFEST\n";
+}
+
+# call main()
+main();
+
+# main()
+sub main {
+    GetOptions(
+        "verbose!" => \$verbose,
+    ) or die Usage();
+
+    exec( "perl -MExtUtils::Manifest -e 'ExtUtils::Manifest::mkmanifest()'" );
+}
+
+=pod
+
+=head1 NAME
+
+mkmanifest - Creates or updates a perl module's MANIFEST file
+
+=head1 SYNOPSIS
+
+% mkmanifest
+
+this might update the contents of the file MANIFEST based
+on the contents of directory.
+
+=head1 DESCRIPTION
+
+Uses ExtUtils::Manifest's mkmanifest() function to 
+add files to the MANIFEST.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2010 Josh Rabinowitz, All Rights Reserved.
+
+=head1 AUTHORS
+
+Josh Rabinowitz
+
+=cut    
+

@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.13';  # version also mentioned in POD below.
+our $VERSION = '0.15';  # version also mentioned in POD below.
 
 sub new {
     my ($self) = @_;
@@ -27,7 +27,7 @@ sub new {
     my $config_reader = new DBIx::FileStore::ConfigFile();
     my $conf = $self->{confhash} = $config_reader->read_config_file();
 
-    #TESTING WITH 1 BYTE BLOCKS
+    # FOR TESTING WITH 1 BYTE BLOCKS
     #my $block_size = 1; # 1 byte blocks (!)
     
     my $block_size = 500 * 1024;        # 512K blocks
@@ -321,7 +321,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.13
+Version 0.15
 
 =head1 SYNOPSIS
 

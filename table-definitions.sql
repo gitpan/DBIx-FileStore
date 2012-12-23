@@ -1,5 +1,5 @@
 -- TABLE DEFINITIONS FOR DBIx-FileStore
--- Sets up tables 'files' and 'fileblocks' as below.
+-- Sets up 'files' and 'fileblocks' tables as below.
 
 -- -----------------------------------------------------------------
 -- --  ALL BELOW IS FROM mysqldump --no-data jl files fileblocks  --
@@ -26,7 +26,7 @@
 -- Table structure for table `files`
 --
 
-DROP TABLE IF EXISTS `files`;
+-- DROP TABLE IF EXISTS `files`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `files` (
@@ -45,7 +45,7 @@ SET character_set_client = @saved_cs_client;
 -- Table structure for table `fileblocks`
 --
 
-DROP TABLE IF EXISTS `fileblocks`;
+-- DROP TABLE IF EXISTS `fileblocks`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `fileblocks` (
