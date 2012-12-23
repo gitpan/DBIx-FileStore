@@ -21,4 +21,4 @@ requires:
   File::Temp: 0
   List::Util: 0
   Test::More: 0
-version: 0.18
+version: 0.19

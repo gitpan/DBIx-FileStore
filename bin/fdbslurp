@@ -33,11 +33,11 @@ fdbslurp - Slurp from stdin into the DBIx::FileStore filestore. Not implemented.
                     
 =head1 SYNOPSIS     
                 
-% fdbslurp filename.txt < SOMEFILE.txt
+    % fdbslurp filename.txt < SOMEFILE.txt
 
 or
 
-% echo "HI THERE" | fdbslurp filename.txt
+    % echo "HI THERE" | fdbslurp filename.txt
 
 Note that this script is not implemented yet.
 

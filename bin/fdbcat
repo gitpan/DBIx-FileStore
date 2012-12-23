@@ -40,9 +40,9 @@ fdbcat - Like cat, but outputs files from DBIx::FileStore
                     
 =head1 SYNOPSIS     
                 
-% fdbcat file_store_name.txt
+  % fdbcat file_store_name.txt
 
-# outputs contents of file_store_name.txt to stdout
+outputs contents of file_store_name.txt to stdout
 
 =head1 AUTHOR
     

@@ -48,17 +48,17 @@ fdbput - Copies files from filesystem to DBIx::FileStore tables
                     
 =head1 SYNOPSIS     
                 
-% fdbput filename.txt
+    % fdbput filename.txt
 
-# writes filename.txt from filesystem to filestore
+writes filename.txt from filesystem to filestore
 
-% fdbput filename.txt filename2.txt
+    % fdbput filename.txt filename2.txt
 
-# puts named files into filestore
+puts named files into filestore
 
-% fdbput filename.txt -local=/tmp/filename-now.txt
+    % fdbput filename.txt -local=/tmp/filename-now.txt
 
-# puts contents of file /tmp/filename-now.txt into filestore
+puts contents of file /tmp/filename-now.txt into filestore
 under the name 'filename.txt'.
 
 =head1 DESCRIPTION 

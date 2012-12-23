@@ -23,7 +23,7 @@ In a nutshell you can copy files into and out of the database
 (respectively) using the commands 'fdbput' and 'fdbget'.
 
 'fdbmv' and 'fdbrm' are also provided, along
-with a few other utilities in the script/ directory.
+with a few other utilities in the bin/ directory.
 
 See the QUICKSTART section below if you just want to get started.
 
@@ -40,11 +40,11 @@ B) The filenames in the filestore cannot contain spaces.
    know. 
 
 For usage details, see the QUICKSTART section of this file (below)
-and the documentation for the filestore scripts in the script/ 
+and the documentation for the filestore scripts in the bin/ 
 directory.
 
 For technical details, see the documentation for DBIx::FileStore
-and for the utilities in script/ as well.
+and for the utilities in bin/ as well.
 
 There's a video demo showing use of the DBIx::FileStore command
 line utilities available at --> http://joshr.com/src/DBIx-FileStore/ 

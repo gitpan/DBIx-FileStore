@@ -40,17 +40,17 @@ fdbget - Copies files from DBIx::Filestore to filesystem
                     
 =head1 SYNOPSIS     
                 
-% fdbget filename.txt
+    % fdbget filename.txt
 
-# fetches filename.txt from filestore, writes to filename.txt on filesystem
+fetches filename.txt from filestore, writes to filename.txt on filesystem
 
-% fdbget filename.txt filename2.txt
+    % fdbget filename.txt filename2.txt
 
-# fetches named files from filestore, writes to filesystem
+fetches named files from filestore, writes to filesystem
 
-% fdbget filename.txt -local=/tmp/filename-now.txt
+    % fdbget filename.txt -local=/tmp/filename-now.txt
 
-# fetches named files from filestore, writes to filesystem
+fetches named files from filestore, writes to filesystem
 under filename specifed by --local=filename option.
 
 =head1 DESCRIPTION 

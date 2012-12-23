@@ -37,13 +37,13 @@ fdbmv - Rename files in DBIx::FileStore
                     
 =head1 SYNOPSIS     
                 
-% fdbmv a.txt b.txt
+    % fdbmv a.txt b.txt
 
-# renames a.txt to b.txt in the filestore
+renames a.txt to b.txt in the filestore
 
-% fdbmv -v a.txt b.txt
+    % fdbmv -v a.txt b.txt
 
-# renames a.txt to b.txt in the filestore, showing the rows
+renames a.txt to b.txt in the filestore, showing the rows
 being renamed in the database.
 
 See options below for more details.

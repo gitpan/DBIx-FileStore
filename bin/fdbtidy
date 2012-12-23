@@ -61,19 +61,19 @@ fdbtidy - Handle dangling blocks in the DBIx::FileStore filestore
                     
 =head1 SYNOPSIS     
                 
-% fdbtidy 
+    % fdbtidy 
 
-# shows if any rows in the fileblocks table don't have a corresponding
+shows if any rows in the fileblocks table don't have a corresponding
 for in the files table.
 
-% fdbtidy -v
+    % fdbtidy -v
 
-# shows if any rows in the fileblocks table don't have a corresponding
+shows if any rows in the fileblocks table don't have a corresponding
 for in the files table, and shows files being checked.
 
-% fdbtidy -clean
+    % fdbtidy -clean
 
-# removes any dangling blocks found.
+removes any dangling blocks found.
 
 =head1 DESCRIPTION 
 

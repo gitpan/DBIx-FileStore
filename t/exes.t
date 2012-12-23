@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!perl 
+use warnings;
 use strict;
 
 use File::Temp;
@@ -11,6 +12,7 @@ our @files;
 
 my $child_name = "";    # the name of this child
 my $child_signal = 0;
+my $perl = $^X;
 
 ############################################
 # we run the whole setup in a BEGIN block so we know how many tests to run before
@@ -54,7 +56,7 @@ sub main {
 # 
 sub test_file {
     my ($file, $test_method) = @_;
-	my $cmd = "perl -c $file";
+	my $cmd = "$perl -c $file";
 	$child_name = "$file, $test_method";
     my ($out, $err, $dollarquestionmark) = RunCommand( $cmd );
 	my @errors = grep { !/syntax ok/i } split(/\n/, $err);

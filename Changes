@@ -1,5 +1,10 @@
 Revision history for DBIx-FileStore
 
+0.19    2012/12/23  6:00PM
+        Note that scripts are in the bin/ directory, not the scripts/ 
+        directory, in the README.
+        Improve formatting of POD
+
 0.18    2012/12/23  5:36PM
         update copyright years
         don't put mkmanifest script into distro

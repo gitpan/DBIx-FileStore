@@ -36,11 +36,13 @@ fdbrm - Deletes files from DBIx::Filestore
                     
 =head1 SYNOPSIS     
                 
-% fdbrm filename.txt
+    % fdbrm filename.txt
 
-# deletes file filename.txt from filestore
+deletes file filename.txt from filestore
 
-% fdbrm filename.txt filename2.txt
+    % fdbrm filename.txt filename2.txt
+
+deletes multiple files from filestore
 
 =head1 DESCRIPTION 
 

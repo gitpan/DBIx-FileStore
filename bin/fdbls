@@ -124,13 +124,13 @@ fdbls - Lists filenames in DBIx::FileStore
                     
 =head1 SYNOPSIS     
                 
-% fdbls
+    % fdbls
 
-# lists all filenames in filestore
+lists all filenames in filestore
 
-% fdbls /home/
+    % fdbls /home/
 
-# lists all filenames in filestore beginning with string /home/
+lists all filenames in filestore beginning with string /home/
 
 See options below for more details.
 
