@@ -1,5 +1,9 @@
 Revision history for DBIx-FileStore
 
+0.21    2012/12/23  1:14AM
+        Updated MANIFEST
+        Re-released so we can tag the code correctly
+
 0.20    2012/12/23  1:05AM
         Implemented fdbslurp, documented it as implemented
         Don't read file twice when inserting data any more

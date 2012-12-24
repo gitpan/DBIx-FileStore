@@ -5,7 +5,6 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 Makefile.PL
-Makefile.old
 README
 TODO
 bin/fdbcat
