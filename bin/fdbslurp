@@ -4,25 +4,30 @@ use strict;
 use Getopt::Long;
 use DBIx::FileStore;
 
+my $verbose = 0;
+# fdbslurp: slurps file(s) from stdin into the DB
+
 main();
 
 sub Usage {
-    "fdbslurp: slurp file into filestore. NOT IMPLEMENTED!\n" .
+    "fdbslurp /fdb/dest [-verbose]: slurp file from stdin into filestore.\n" .
     "  Example:         fdbslurp /fdb/dest < filename\n" .
-    "  is the same as:  fdbput --local filename /fdb/dest\n";
+    "  Is the same as:  fdbput --local filename /fdb/dest\n";
 }
 
 sub main {
     $|++;
-    # fdbslurp: slurps file(s) from stdin into the DB
     
-    #GetOptions() || die Usage();
-    #
-    my $filestore = new DBIx::FileStore();
+    GetOptions(
+        "verbose!" => \$verbose,
+    ) || die Usage();
+    
+    my $filestore = new DBIx::FileStore( verbose => $verbose );
+    die Usage() unless (@ARGV == 1);
 
-    die Usage();    # NOTE: NOT IMPLEMENTED
+    $filestore->write_from_filehandle_to_db( *STDIN, $ARGV[0] );
 
-    # CODE HERE
+
 }
 
 =pod
@@ -39,11 +44,9 @@ or
 
     % echo "HI THERE" | fdbslurp filename.txt
 
-Note that this script is not implemented yet.
-
 =head1 DESCRIPTION 
 
-Slurp from stdin into the L<DBIx::FileStore> filestore. Not implemented.
+Slurp from stdin into the L<DBIx::FileStore> filestore. 
 
 =head1 AUTHOR
 

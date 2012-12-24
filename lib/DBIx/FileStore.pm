@@ -15,21 +15,20 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.19';  # version also mentioned in POD below.
+our $VERSION = '0.20';  # version also mentioned in POD below.
 
 sub new {
-    my ($self) = @_;
+    my ($self, %opts) = @_;
     unless (ref $self) {
         $self = fields::new($self);
-        #$self->{_Foo_private} = "this is Foo's secret";
     }
+    if ($opts{verbose}) { $self->{verbose}=1; }
 
     my $config_reader = new DBIx::FileStore::ConfigFile();
     my $conf = $self->{confhash} = $config_reader->read_config_file();
 
     # FOR TESTING WITH 1 BYTE BLOCKS
     #my $block_size = 1; # 1 byte blocks (!)
-    
     my $block_size = 500 * 1024;        # 512K blocks
     $self->{blocksize}   = $block_size;
     #   with 900K (or even 600K) blocks, when inserting binary .rpm files, 
@@ -42,9 +41,11 @@ sub new {
     #
     
 
-    # WE DON'T USE LOCKS ANY MORE. Like a real filesystem, you might
+    ###############################################################################
+    # By default, WE DON'T USE LOCKS ANY MORE. Like a real filesystem, you might
     # get interspersed or truncated information if the filesystem is
     # being changed while you're reading!
+    ###############################################################################
     $self->{uselocks}    = 0;
 
     $self->{dbuser}      = $conf->{dbuser} || die "$0: no dbuser set\n";
@@ -75,6 +76,7 @@ sub get_all_filenames {
                 where b_num=0 order by name");
     return $files;
 }
+
 sub get_filenames_matching_prefix {
     my ($self, $name) = @_;
     my $pattern = $name . "%"; 
@@ -83,7 +85,6 @@ sub get_filenames_matching_prefix {
          where name like ? and b_num=0 order by name", {}, $pattern);
     return $files;
 }
-
 
 sub print_blocks_from_db_to_filehandle {
     my ($self, $filehandle, $fdbname) = @_;
@@ -107,7 +108,6 @@ sub read_from_db {
 
     open( my $fh, ">", $pathname) || die "$0: can't open for output: $pathname\n";
 
-
     # this is a function used as a callback and called with each chunk of the data 
     # into a temporary file.  $fh stay in context for the function (closure) below.
     my $print_to_file_callback = sub {    
@@ -115,7 +115,6 @@ sub read_from_db {
         my $content = shift;
         print $fh $content;
     };
-
 
     # read all our blocks, calling our callback for each one
     my $ret = $self->_read_blocks_from_db( $print_to_file_callback, $fdbname ); 
@@ -142,12 +141,12 @@ sub _read_blocks_from_db {
     die "$0: name not ok: $fdbname" unless name_ok($fdbname);
     my $dbh = $self->{dbh};
     my $verbose = $self->{verbose};
-    my $filetable = $self->{filetable};
-    my $cmd = "select name, b_md5, c_md5, b_num, c_len from $filetable where name like ? order by b_num";
-    my @params = ( $fdbname . ' %' );
-    #print "CMD = $cmd -- @params\n";
+    my $ctx = Digest::MD5->new();
+    
     warn "$0: Fetching rows $fdbname" if $verbose;
     $self->_lock_tables();
+    my $cmd = "select name, b_md5, c_md5, b_num, c_len from $self->{filetable} where name like ? order by b_num";
+    my @params = ( $fdbname . ' %' );
     my $sth = $dbh->prepare($cmd);
     my $rv =  $sth->execute( @params );
     my $rownum = 0;
@@ -175,12 +174,18 @@ sub _read_blocks_from_db {
         my ($block) =  $dbh->selectrow_array("select block from fileblocks where name=?", {}, $row->[0]);
         die "$0: Bad MD5 checksum for $row->[0] ($row->[1] != " . md5_base64( $block ) 
             unless ($row->[1] eq md5_base64( $block ));
+        $ctx->add($block);
 
         &$callback( $block );   # call the callback, and pass it the block!
 
         $rownum++;
     }
     $self->_unlock_tables();
+
+    my $retrieved_md5 = $ctx->b64digest();
+    die "$0: Bad MD5 checksum for $fdbname ($retrieved_md5 != $orig_c_md5)"
+        unless ($retrieved_md5 eq $orig_c_md5);
+        
     return $c_len;  # for your inspection
 }
 
@@ -194,46 +199,54 @@ sub write_to_db {
     open(my $fh, "<" , $pathname) 
         || die "$0: Couldn't open: $pathname\n";
     
-    my $verbose = $self->{verbose};
-    print "Computing md5 of $pathname...\n" if $verbose;
-    my $ctx = Digest::MD5->new; 
-    $ctx->addfile( $fh );
-    my $c_md5 = $ctx->b64digest;    # this reads the file apparently
-    #print "MD5 ($_) = $c_md5\n";
 
-    # get the length and rewind the file
-    my $total_length = -s $pathname;   
-    seek($fh, 0, 0);            # rewind file 
-
+    my $total_length = -s $pathname;   # get the length 
     if ($total_length == 0) { warn "$0: warning: writing 0 bytes for $pathname\n"; }
 
+    my $bytecount = $self->write_from_filehandle_to_db( $fh, $fdbname );
+
+    die "$0: file length didn't match written data length for $pathname: $bytecount != $total_length\n"
+        if ($bytecount != $total_length);
+
+    close ($fh) || die "$0: couldn't close: $pathname\n";
+    return $total_length;
+}
+
+sub write_from_filehandle_to_db {
+    my ($self, $fh, $fdbname) = @_;
+
+    my $ctx = Digest::MD5->new; 
     my $dbh = $self->{dbh};
     my $filetable = $self->{filetable};
     my $blockstable = $self->{blockstable};
+    my $verbose = $self->{verbose};
+    my $size = 0;
+
     $self->_lock_tables();
     for( my ($bytes,$part,$block) = (0,0,"");           # init
     $bytes = read($fh, $block, $self->{blocksize});    # test 
     $part++, $block="" ) {                              # increment
-        #warn "Read $bytes bytes of $pathname...\n";
+        $ctx->add( $block );
+        $size += length( $block );
         my $b_md5 = md5_base64( $block );
 
-        printf("saving from %s into '%s '", $pathname, $fdbname, $part) 
-            if($verbose && $part==0);
-
-        print "$part." if ($verbose && $part % 25 == 0);
+        printf("saving from filehandle into '%s $part'\n", $fdbname )
+            if($verbose && $part%25==0); 
 
         my $name = sprintf("%s %05d", $fdbname, $part);
         $dbh->do("replace into $filetable set name=?, c_md5=?, b_md5=?, c_len=?, b_num=?", {}, 
-            $name, $c_md5, $b_md5, $total_length, $part);
+            $name, "?", $b_md5, 0, $part);
         $dbh->do("replace into $blockstable set name=?, block=?", {}, 
             $name, $block);
-        #warn "Wrote $bytes bytes to block $pathname...\n";
     }
-    $self->_unlock_tables();
-    close ($fh) || die "$0: couldn't close: $pathname\n";
     print "\n" if $verbose;
-    return $total_length;
+    $dbh->do( "update $filetable set c_md5=?, c_len=? where name like ?", {}, $ctx->b64digest, $size, "$fdbname %" );
+    $self->_unlock_tables();
+
+    return $size;
 }
+
+
 
 sub _lock_tables {
     my $self = shift;
@@ -321,7 +334,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.19
+Version 0.20
 
 =head1 SYNOPSIS
 
@@ -425,6 +438,11 @@ file could not be read.
 
 Note that it currently reads the file twice: once to compute the md5 checksum
 before insterting it, and a second time to insert the blocks.
+
+=head2 my $bytecount = $self->write_from_filehandle_to_db ($fh, $fdbname)
+
+Reads blocks of the appropriate block size from $fb and writes them 
+into the fdb under the name $fdbname.
 
 =head2 rename_file( $from, $to );
 
@@ -534,7 +552,7 @@ In concrete terms, though, the storage overhead of doing it this way
 (which only affects files larger than the block size, which defaults
 to 512K) is about 100 bytes per block.  Assuming files larger than
 512K, and with a conservative average block size of 256K, the extra 
-storage overhead of doing it this way is still only about 0.03%. 
+storage overhead of doing it this way is still only about 0.039% 
 
 =head1 AUTHOR
 
@@ -545,9 +563,7 @@ Josh Rabinowitz, C<< <Josh Rabinowitz> >>
 You should probably read the documentation for the various filestore command-line
 tools:
 
-  fdbcat, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbstat, and fdbtidy.
-  fdbslurp (which is the opposite of fdbcat) was not completed.
-
+  fdbcat, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbslurp, fdbstat, and fdbtidy.
 
 You can also read the documentation at:
 

@@ -25,6 +25,7 @@ lib/DBIx/FileStore/ConfigFile.pm
 lib/DBIx/FileStore/UtilityFunctions.pm
 t/00-load.t
 t/actualtest.t
+t/author-critic.t
 t/boilerplate.t
 t/exes.t
 t/manifest.t

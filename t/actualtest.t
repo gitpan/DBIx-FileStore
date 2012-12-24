@@ -1,4 +1,4 @@
-#!perl -T
+#!perl 
 
 use strict;
 use warnings;
@@ -21,25 +21,26 @@ if ( $ENV{RELEASE_TESTING} ) {
 #plan skip_all => "Test::CheckManifest 0.9 required" if $@;
 #ok_manifest();
 
-$ENV{PATH} = "/usr/bin:/bin";
+#$ENV{PATH} = "/usr/bin:/bin";
 
+my $perl = "$^X -w -Mstrict";
 #1) TEST fdbls: no files in /testfolder
-my @out = btick( "bin/fdbls /testfolder/" );
+my @out = btick( "$perl bin/fdbls /testfolder/" );
 ok( scalar(@out) == 0, "fdbls: no files in /testfolder/ (@out)" );
 
 #2) test fdbput - put a file in /testfolder/
-mysystem( "bin/fdbput -l bin/fdbput /testfolder/fdbput" );
-my @files = btick( "bin/fdbls /testfolder/fdbput" );
+mysystem( "$perl bin/fdbput -l bin/fdbput /testfolder/fdbput" );
+my @files = btick( "$perl bin/fdbls /testfolder/fdbput" );
 ok( scalar(@files) == 1, "fdbput: file in /testfolder/ (@files)" );
 
 #3) test fdbmv - rename a file in /testfolder/
-mysystem( "bin/fdbmv /testfolder/fdbput /testfolder/fdbput-was" );
-@files = btick( "bin/fdbls /testfolder/fdbput-was" );
+mysystem( "$perl bin/fdbmv /testfolder/fdbput /testfolder/fdbput-was" );
+@files = btick( "$perl bin/fdbls /testfolder/fdbput-was" );
 ok( scalar(@files) == 1, "fdbmv: fdbput-was in /testfolder/ (@files)" );
 
 #4) test fdbrm - remove a file in /testfolder/
-mysystem( "bin/fdbrm /testfolder/fdbput-was" );
-@files = btick( "bin/fdbls /testfolder/" );
+mysystem( "$perl bin/fdbrm /testfolder/fdbput-was" );
+@files = btick( "$perl bin/fdbls /testfolder/" );
 ok( scalar(@files) == 0, "fdbrm: no file /testfolder/ (@files)" );
         
 sub mysystem {

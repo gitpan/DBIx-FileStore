@@ -1,4 +1,6 @@
 package DBIx::FileStore::UtilityFunctions;
+use strict;
+use warnings;
 
 use base qw(Exporter);
 our @EXPORT_OK = qw( convert_bytes_to_human_size get_date_and_time get_user_homedir );
