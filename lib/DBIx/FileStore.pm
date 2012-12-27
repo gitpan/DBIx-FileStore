@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.21';  # version also mentioned in POD below.
+our $VERSION = '0.22';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -334,7 +334,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.21
+Version 0.22
 
 =head1 SYNOPSIS
 
@@ -439,10 +439,11 @@ file could not be read.
 Note that it currently reads the file twice: once to compute the md5 checksum
 before insterting it, and a second time to insert the blocks.
 
-=head2 my $bytecount = $self->write_from_filehandle_to_db ($fh, $fdbname)
+=head2 write_from_filehandle_to_db ($fh, $fdbname)
 
 Reads blocks of the appropriate block size from $fb and writes them 
 into the fdb under the name $fdbname.
+Returns the number of bytes written into the filestore.
 
 =head2 rename_file( $from, $to );
 

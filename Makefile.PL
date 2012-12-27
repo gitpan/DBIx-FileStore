@@ -34,12 +34,13 @@ my %WriteMakefileArgs = (
     "DBI" => 0,
     "Digest::MD5" => 0,
     "File::Copy" => 0,
+    "File::Slurp" => 0,
     "File::Spec::Functions" => 0,
     "File::Temp" => 0,
     "List::Util" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.21",
+  "VERSION" => "0.22",
   "test" => {
     "TESTS" => "t/*.t"
   }
