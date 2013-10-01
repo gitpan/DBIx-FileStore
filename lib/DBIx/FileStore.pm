@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.22';  # version also mentioned in POD below.
+our $VERSION = '0.23';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -334,7 +334,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.22
+Version 0.23
 
 =head1 SYNOPSIS
 
@@ -479,7 +479,8 @@ The fileblocks table has only three fields:
 
 =head3 name 
 
-The name of the block. Always looks like "filename.txt <BLOCKNUMBER>",
+The name of the block, exactly as used in the fileblocks table. 
+Always looks like "filename.txt <BLOCKNUMBER>",
 for example "filestorename.txt 00000".
 
 =head3 block
@@ -499,12 +500,6 @@ The files table has several fields. There is one row in the files table
 for each row in the fileblocks table-- not one per file (see IMPLEMENTATION 
 CAVEATS, below). The fields in the files table are:
 
-=head3 name 
-
-The name of the block, exactly as used in the fileblocks table. 
-Always looks like "filename.txt <BLOCKNUMBER>",
-for example "filestorename.txt 00000".
-
 =head3 c_len 
 
 Content length. The content length of the complete file (sum of length of all the file's blocks).
@@ -513,7 +508,7 @@ Content length. The content length of the complete file (sum of length of all th
 
 Block number. The number of the block this row represents. The b_num is repeated as a five
 (or more) digit number at the end of the name field (see above). We denormalize
-the data like this so we can quickly find blocks by name or block number.
+the data like this so we can quickly and easily find blocks by name or block number.
 
 =head3 b_md5
 
@@ -564,13 +559,13 @@ Josh Rabinowitz, C<< <Josh Rabinowitz> >>
 You should probably read the documentation for the various filestore command-line
 tools:
 
-  fdbcat, fdbget, fdbls, fdbmv, fdbput, fdbrm, fdbslurp, fdbstat, and fdbtidy.
-
-You can also read the documentation at:
+  L<fdbcat>, L<fdbget>, L<fdbls>, L<fdbmv>, L<fdbput>, L<fdbrm>, L<fdbslurp>, L<fdbstat>, and L<fdbtidy>.
 
 =over 4
 
 =item * Search CPAN
+
+You can also read the documentation at:
 
 L<http://search.cpan.org/dist/DBIx-FileStore/>
 
@@ -578,7 +573,7 @@ L<http://search.cpan.org/dist/DBIx-FileStore/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2012 Josh Rabinowitz.
+Copyright 2010-2013 Josh Rabinowitz.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

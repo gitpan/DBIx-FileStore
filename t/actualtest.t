@@ -8,7 +8,7 @@ use Test::More;
 if ( $ENV{RELEASE_TESTING} ) {
     plan( tests=>4 );
 } else {
-    plan( skip_all => "Author tests not required for installation" );
+    plan( skip_all => "Author tests not required for installation, use env var RELEASE_TESTING to enable" );
 }
 
 

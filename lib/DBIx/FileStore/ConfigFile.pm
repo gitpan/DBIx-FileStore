@@ -108,7 +108,7 @@ with an error message.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2012 Josh Rabinowitz, All Rights Reserved.
+Copyright (c) 2010-2013 Josh Rabinowitz, All Rights Reserved.
 
 =head1 AUTHORS
 
