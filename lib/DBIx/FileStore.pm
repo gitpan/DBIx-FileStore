@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.23';  # version also mentioned in POD below.
+our $VERSION = '0.24';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -334,7 +334,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.23
+Version 0.24
 
 =head1 SYNOPSIS
 
@@ -559,7 +559,7 @@ Josh Rabinowitz, C<< <Josh Rabinowitz> >>
 You should probably read the documentation for the various filestore command-line
 tools:
 
-  L<fdbcat>, L<fdbget>, L<fdbls>, L<fdbmv>, L<fdbput>, L<fdbrm>, L<fdbslurp>, L<fdbstat>, and L<fdbtidy>.
+L<fdbcat>, L<fdbget>, L<fdbls>, L<fdbmv>, L<fdbput>, L<fdbrm>, L<fdbslurp>, L<fdbstat>, and L<fdbtidy>.
 
 =over 4
 

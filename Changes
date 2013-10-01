@@ -1,5 +1,8 @@
 Revision history for DBIx-FileStore
 
+0.24    2013/09/30  
+        Improve docs.
+
 0.23    2013/09/30  
         Improve documentation and use of pod.
         Update copyrights.
