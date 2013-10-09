@@ -1,5 +1,9 @@
 Revision history for DBIx-FileStore
 
+0.25    2013/10/08
+        Reorganize methods in DBIx::FileStore, document changes.
+        Improve docs.
+
 0.24    2013/09/30  
         Improve docs.
 

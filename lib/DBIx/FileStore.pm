@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.24';  # version also mentioned in POD below.
+our $VERSION = '0.25';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -31,6 +31,7 @@ sub new {
     #my $block_size = 1; # 1 byte blocks (!)
     my $block_size = 500 * 1024;        # 512K blocks
     $self->{blocksize}   = $block_size;
+
     #   with 900K (or even 600K) blocks, when inserting binary .rpm files, 
     #   we get
     #
@@ -86,8 +87,51 @@ sub get_filenames_matching_prefix {
     return $files;
 }
 
-sub print_blocks_from_db_to_filehandle {
-    my ($self, $filehandle, $fdbname) = @_;
+sub rename_file {
+    my ($self, $from, $to) = @_;
+    die "$0: name not ok: $from" unless name_ok($from);
+    die "$0: name not ok: $to" unless name_ok($to);
+    # renames the rows in the filetable and the blockstable
+    my $dbh = $self->{dbh};
+    $self->_lock_tables();
+
+    for my $table ( ( $self->{filetable}, $self->{blockstable} ) ) {
+        my $sql = "select name from $table where name like ?";
+        $sql .= " order by b_num" if $table eq $self->{filetable};
+
+        my $files = $dbh->selectall_arrayref( $sql, {}, $from . " %");
+        for my $f (@$files) {
+            (my $num = $f->[0]) =~ s/.* //;
+            print "$0: Moving $table:$f->[0], (num $num) to '$to $num'...\n" if $self->{verbose};
+            $dbh->do("update $table set name=? where name=?", {}, "$to $num", $f->[0]);
+        }
+    }
+
+    $self->_unlock_tables();
+    return 1;
+}
+
+sub delete_file {
+    my ($self, $name) = @_;
+    die "$0: name not ok: $name" unless name_ok($name);
+
+    my $dbh         = $self->{dbh};
+    my $filetable   = $self->{filetable};        # probably "files"
+    my $blockstable = $self->{blockstable};    # probably "fileblocks"
+    for my $table ( ( $filetable, $blockstable ) ) {
+        my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$name %" ));
+        if($rv) {
+            print "$0: $table: deleted $name ($rv blocks)\n" if $self->{verbose};
+        } else {
+            warn  "$0: no blocks to delete for $table:$name\n" if $self->{verbose};
+        }
+    }
+    return 1;
+}
+
+
+sub copy_blocks_from_db_to_filehandle {
+    my ($self, $fdbname, $filehandle) = @_;
     die "$0: name not ok: $fdbname" unless name_ok($fdbname);
     my $print_to_filehandle_callback = sub {    
         # this is a closure, so $fh comes from the surrounding context
@@ -131,62 +175,6 @@ sub read_from_db {
 
     # return number of bytes read.
     return $ret;    
-}
-
-# returns the length of the data read,
-# calls &$callback( $block ) for each block read.
-sub _read_blocks_from_db {
-    my ($self, $callback, $fdbname) = @_;
-        # callback is called on each block, like &$callback( $block )
-    die "$0: name not ok: $fdbname" unless name_ok($fdbname);
-    my $dbh = $self->{dbh};
-    my $verbose = $self->{verbose};
-    my $ctx = Digest::MD5->new();
-    
-    warn "$0: Fetching rows $fdbname" if $verbose;
-    $self->_lock_tables();
-    my $cmd = "select name, b_md5, c_md5, b_num, c_len from $self->{filetable} where name like ? order by b_num";
-    my @params = ( $fdbname . ' %' );
-    my $sth = $dbh->prepare($cmd);
-    my $rv =  $sth->execute( @params );
-    my $rownum = 0;
-    my $c_len  = 0;
-    my $orig_c_md5;
-    while( my $row = $sth->fetchrow_arrayref() ) {
-        $c_len  ||= $row->[5];
-        unless ($row && defined($row->[0])) {
-            warn "$0: Error: bad row returned?";
-            next;
-        }
-        print "$row->[0]\n" if $verbose;
-        unless ($row->[0] =~ /\s+(\d+)$/) {
-            warn "$0: Skipping block that doesn't match ' [0-9]+\$': $row->[0]";
-            next;
-        }
-        my $name_num = $1;
-        $orig_c_md5 ||= $row->[2];
-
-        # check the MD5...
-        if ($row->[2] ne $orig_c_md5) { die "$0: Error: Is DB being updated? Bad content md5sum for $row->[0]\n"; }
-        die "$0: Error: our count is row num $rownum, but file says $name_num" 
-            unless $rownum == $name_num;
-        
-        my ($block) =  $dbh->selectrow_array("select block from fileblocks where name=?", {}, $row->[0]);
-        die "$0: Bad MD5 checksum for $row->[0] ($row->[1] != " . md5_base64( $block ) 
-            unless ($row->[1] eq md5_base64( $block ));
-        $ctx->add($block);
-
-        &$callback( $block );   # call the callback, and pass it the block!
-
-        $rownum++;
-    }
-    $self->_unlock_tables();
-
-    my $retrieved_md5 = $ctx->b64digest();
-    die "$0: Bad MD5 checksum for $fdbname ($retrieved_md5 != $orig_c_md5)"
-        unless ($retrieved_md5 eq $orig_c_md5);
-        
-    return $c_len;  # for your inspection
 }
 
 
@@ -247,6 +235,63 @@ sub write_from_filehandle_to_db {
 }
 
 
+#  From here below is utility code and implementation details
+# returns the length of the data read,
+# calls &$callback( $block ) for each block read.
+sub _read_blocks_from_db {
+    my ($self, $callback, $fdbname) = @_;
+        # callback is called on each block, like &$callback( $block )
+    die "$0: name not ok: $fdbname" unless name_ok($fdbname);
+    my $dbh = $self->{dbh};
+    my $verbose = $self->{verbose};
+    my $ctx = Digest::MD5->new();
+    
+    warn "$0: Fetching rows $fdbname" if $verbose;
+    $self->_lock_tables();
+    my $cmd = "select name, b_md5, c_md5, b_num, c_len from $self->{filetable} where name like ? order by b_num";
+    my @params = ( $fdbname . ' %' );
+    my $sth = $dbh->prepare($cmd);
+    my $rv =  $sth->execute( @params );
+    my $rownum = 0;
+    my $c_len  = 0;
+    my $orig_c_md5;
+    while( my $row = $sth->fetchrow_arrayref() ) {
+        $c_len  ||= $row->[5];
+        unless ($row && defined($row->[0])) {
+            warn "$0: Error: bad row returned?";
+            next;
+        }
+        print "$row->[0]\n" if $verbose;
+        unless ($row->[0] =~ /\s+(\d+)$/) {
+            warn "$0: Skipping block that doesn't match ' [0-9]+\$': $row->[0]";
+            next;
+        }
+        my $name_num = $1;
+        $orig_c_md5 ||= $row->[2];
+
+        # check the MD5...
+        if ($row->[2] ne $orig_c_md5) { die "$0: Error: Is DB being updated? Bad content md5sum for $row->[0]\n"; }
+        die "$0: Error: our count is row num $rownum, but file says $name_num" 
+            unless $rownum == $name_num;
+        
+        my ($block) =  $dbh->selectrow_array("select block from fileblocks where name=?", {}, $row->[0]);
+        die "$0: Bad MD5 checksum for $row->[0] ($row->[1] != " . md5_base64( $block ) 
+            unless ($row->[1] eq md5_base64( $block ));
+        $ctx->add($block);
+
+        &$callback( $block );   # call the callback, and pass it the block!
+
+        $rownum++;
+    }
+    $self->_unlock_tables();
+
+    my $retrieved_md5 = $ctx->b64digest();
+    die "$0: Bad MD5 checksum for $fdbname ($retrieved_md5 != $orig_c_md5)"
+        unless ($retrieved_md5 eq $orig_c_md5);
+        
+    return $c_len;  # for your inspection
+}
+
 
 sub _lock_tables {
     my $self = shift;
@@ -259,48 +304,6 @@ sub _unlock_tables {
     if ($self->{uselocks}) {
         $self->{dbh}->do("unlock tables");
     }
-}
-
-sub rename_file {
-    my ($self, $from, $to) = @_;
-    die "$0: name not ok: $from" unless name_ok($from);
-    die "$0: name not ok: $to" unless name_ok($to);
-    # renames the rows in the filetable and the blockstable
-    my $dbh = $self->{dbh};
-    $self->_lock_tables();
-
-    for my $table ( ( $self->{filetable}, $self->{blockstable} ) ) {
-        my $sql = "select name from $table where name like ?";
-        $sql .= " order by b_num" if $table eq $self->{filetable};
-
-        my $files = $dbh->selectall_arrayref( $sql, {}, $from . " %");
-        for my $f (@$files) {
-            (my $num = $f->[0]) =~ s/.* //;
-            print "$0: Moving $table:$f->[0], (num $num) to '$to $num'...\n" if $self->{verbose};
-            $dbh->do("update $table set name=? where name=?", {}, "$to $num", $f->[0]);
-        }
-    }
-
-    $self->_unlock_tables();
-    return 1;
-}
-
-sub delete_file {
-    my ($self, $name) = @_;
-    die "$0: name not ok: $name" unless name_ok($name);
-
-    my $dbh         = $self->{dbh};
-    my $filetable   = $self->{filetable};        # probably "files"
-    my $blockstable = $self->{blockstable};    # probably "fileblocks"
-    for my $table ( ( $filetable, $blockstable ) ) {
-        my $rv = int($dbh->do( "delete from $table where name like ?", {}, "$name %" ));
-        if($rv) {
-            print "$0: $table: deleted $name ($rv blocks)\n" if $self->{verbose};
-        } else {
-            warn  "$0: no blocks to delete for $table:$name\n" if $self->{verbose};
-        }
-    }
-    return 1;
 }
 
 
@@ -334,7 +337,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.24
+Version 0.25
 
 =head1 SYNOPSIS
 
@@ -402,11 +405,24 @@ my $bytecount = $filestore->read_from_db( "filesystemname.txt", "filestorename.t
 Copies the file 'filestorename.txt' from the filestore to the file filesystemname.txt
 on the local filesystem.
 
-=head2 print_blocks_from_db_to_filehandle()
+=head2 rename_file( $from, $to );
 
-my $bytecount = $filestore->print_blocks_from_db_to_filehandle( $fh, $fdbname );
+my $ok = $self->rename_file( $from, $to );
 
-Prints the file 'filestorename.txt' from the filestore to the the filehandle.
+Renames the file in the database from $from to $to.
+Returns 1;
+
+=head2 delete_file( $fdbname );
+
+my $ok = $self->delete_file( $fdbname );
+
+Removes data named $filename from the filestore.
+
+=head2 copy_blocks_from_db_to_filehandle()
+
+my $bytecount = $filestore->copy_blocks_from_db_to_filehandle( $fdbname, $fh );
+
+copies blocks from the filehandle $fh into the fdb at the name $fdbname
 
 =head2 _read_blocks_from_db( $callback_function, $fdbname );
 
@@ -417,11 +433,10 @@ my $bytecount = $filestore->_read_blocks_from_db( $callback_function, $fdbname )
 Fetches the blocks from the database for the file stored under $fdbname,
 and calls the $callback_function on the data from each one after it is read.
 
-Locks the relevant tables while data is extracted. Locking should probably 
-be configurable by the caller, or at least finer-grained.
-
 It also confirms that the base64 md5 checksum for each block and the file contents
 as a whole are correct. Die()'s with an error if a checksum doesn't match.
+
+If uselocks is set, lock the relevant tables while data is extracted. 
 
 =head2 write_to_db( $localpathname, $filestorename );
 
@@ -444,19 +459,6 @@ before insterting it, and a second time to insert the blocks.
 Reads blocks of the appropriate block size from $fb and writes them 
 into the fdb under the name $fdbname.
 Returns the number of bytes written into the filestore.
-
-=head2 rename_file( $from, $to );
-
-my $ok = $self->rename_file( $from, $to );
-
-Renames the file in the database from $from to $to.
-Returns 1;
-
-=head2 delete_file( $filename );
-
-my $ok = $self->delete_file( $filename );
-
-Removes data named $filename from the filestore.
 
 =head1 FUNCTIONS
 

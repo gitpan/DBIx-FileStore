@@ -1,4 +1,4 @@
-#!perl 
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -23,7 +23,7 @@ if ( $ENV{RELEASE_TESTING} ) {
 
 #$ENV{PATH} = "/usr/bin:/bin";
 
-my $perl = "$^X -w -Mstrict";
+my $perl = "$^X -w -Mstrict";   # warnings and strict on
 #1) TEST fdbls: no files in /testfolder
 my @out = btick( "$perl bin/fdbls /testfolder/" );
 ok( scalar(@out) == 0, "fdbls: no files in /testfolder/ (@out)" );

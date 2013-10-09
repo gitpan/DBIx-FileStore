@@ -26,7 +26,7 @@ sub main {
             warn "Skipping invalid file named $filename\n";
             next;
         }
-        $dbfs->print_blocks_from_db_to_filehandle( *STDOUT, $filename );
+        $dbfs->copy_blocks_from_db_to_filehandle( $filename, *STDOUT );
     }
 }
 

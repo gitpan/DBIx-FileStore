@@ -83,7 +83,7 @@ sub on_exit {
     # uses the shell underneath
     sub RunCommand {
         my ($cmd, $tmpdir, $should_be_undef) = @_;
-        die "$0: Internal Error: Sman::Util::RunCommand called with three arguments\n" 
+        die "$0: Internal Error: RunCommand called with three arguments\n" 
             if $should_be_undef;
         $tmpdir = "/tmp" unless defined $tmpdir;
         my ($out, $err) = ("", "");
