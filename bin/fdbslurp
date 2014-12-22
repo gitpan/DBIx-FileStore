@@ -34,7 +34,7 @@ sub main {
             
 =head1 NAME     
             
-fdbslurp - Slurp from stdin into the DBIx::FileStore filestore. Not implemented.
+fdbslurp - Slurp from stdin into the DBIx::FileStore filestore. 
                     
 =head1 SYNOPSIS     
                 
