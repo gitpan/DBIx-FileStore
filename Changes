@@ -1,5 +1,8 @@
 Revision history for DBIx-FileStore
 
+0.27    2014/12/22
+        Test release
+
 0.26    2014/04/22
         Note that fdbslurp is implemented.
 

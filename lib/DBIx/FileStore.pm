@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.26';  # version also mentioned in POD below.
+our $VERSION = '0.27';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -337,7 +337,7 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.26
+Version 0.27
 
 =head1 SYNOPSIS
 
@@ -575,7 +575,7 @@ L<http://search.cpan.org/dist/DBIx-FileStore/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2013 Josh Rabinowitz.
+Copyright 2010-2014 Josh Rabinowitz.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

@@ -2,6 +2,8 @@ package DBIx::FileStore::UtilityFunctions;
 use strict;
 use warnings;
 
+# utility functions for DBIx::FileStore
+
 use base qw(Exporter);
 our @EXPORT_OK = qw( convert_bytes_to_human_size get_date_and_time get_user_homedir );
 
@@ -15,7 +17,7 @@ sub convert_bytes_to_human_size {
     return unless defined( $bytes );
     my $precision = 2;  # in more advanced versions we let the caller optionally specify this.
     my $k_size = 1024;
-    return "?" unless ($bytes =~ s/ ^ \s* (\d+( \. \d* )?) //x );   # negative bytes not allowed
+    return "?" unless ($bytes =~ s/ ^ \s* (\d+( \. \d* )?) $//x );   # negative bytes not allowed
     $bytes = $1;                # pull out the cleaned up version
 
     # this should be factored out
@@ -30,12 +32,12 @@ sub convert_bytes_to_human_size {
     for my $row (@table) {
         if ($bytes > $row->[0]) {  
             my $value =  $bytes / $row->[0];
-            if ($value =~ /^\d+(\.0*)?$/) {
-                $value = int( $value );
+            if ($value =~ /^\d+(\.0*)?$/) { # if it's .000*
+                $value = int( $value );     # truncate fraction
             } else {
-                $value = sprintf( "%.${precision}f", $value);
+                $value = sprintf( "%.${precision}f", $value);   # show to desired precision
             }
-            return $value . $row->[1];  # the value, followed by the unit name
+            return $value . $row->[1];  # return the value followed by the unit name, like 14.5G or 12M or 12.44K
         } 
     }
     return "${bytes}B";
@@ -117,7 +119,7 @@ or the one whose name is passed.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2013 Josh Rabinowitz, All Rights Reserved.
+Copyright (c) 2010-2014 Josh Rabinowitz, All Rights Reserved.
 
 =head1 AUTHORS
 
