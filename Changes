@@ -1,5 +1,10 @@
 Revision history for DBIx-FileStore
 
+0.28    2015/01/03
+        Fix date test to pass in 2015
+        Update docs a little
+        Update copyrights to 2015
+
 0.27    2014/12/22
         Test release
 

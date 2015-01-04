@@ -15,7 +15,7 @@ use fields qw(  dbh dbuser dbpasswd
                 uselocks
                 );
 
-our $VERSION = '0.27';  # version also mentioned in POD below.
+our $VERSION = '0.28';  # version also mentioned in POD below.
 
 sub new {
     my ($self, %opts) = @_;
@@ -337,12 +337,11 @@ DBIx::FileStore - Module to store files in a DBI backend
 
 =head1 VERSION
 
-Version 0.27
+Version 0.28
 
 =head1 SYNOPSIS
 
-Ever wanted to store files in a database? Yeah, it's 
-probably a bad idea, but maybe you want to do it anyway. 
+Ever wanted to store files in a database? 
 
 This code helps you do that.
 
@@ -534,7 +533,7 @@ the db schema used.
 
 DBIx::FileStore is what I would consider production-grade code, 
 but the overall wisdom of storing files in blobs in a mysql database
-may be questionable (for good reason). 
+may be questionable (for good reason).  
 
 That having been said, if you have a good reason to do so, as long 
 as you understand the repercussions of storing files in 
@@ -575,7 +574,7 @@ L<http://search.cpan.org/dist/DBIx-FileStore/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2010-2014 Josh Rabinowitz.
+Copyright 2010-2015 Josh Rabinowitz.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
